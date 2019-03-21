@@ -10,7 +10,8 @@
 
     fs.readFile("./hasura-auto-tracker.json", (err, data) => {
         tracker_config = JSON.parse(data.toString());
+
+        // Execute the tracker configuration
+        ExecuteHasuraTracker(tracker_config, tracker_log);
     });
 
-    // Execute the tracker configuration
-    ExecuteHasuraTracker(tracker_config, tracker_log);
