@@ -7,7 +7,7 @@
   "author": "AxisTech and NamSource",
   "license": "GNU",
   "scripts": {
-    "start": "nodemon --experimental-modules --exec babel-node ."
+    "start": "nodemon --exec babel-node ."
   },
   "dependencies": {
     "axios": "^0.18.0",
