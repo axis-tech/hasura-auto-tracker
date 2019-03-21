@@ -11,8 +11,8 @@ export default async function ExecuteHasuraTracker(inputConfig, logOutput) {
 
     var config = {
         ...inputConfig,
-        getArrayRelationshipName: null,
-        getObjectRelationshipName: null,
+        getArrayRelationshipName: null,  // Add your own function(relationship_spec) - return a string
+        getObjectRelationshipName: null, // Add your own function(relationship_spec) - return a string
         logOutput: logOutput
     };
 
