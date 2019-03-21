@@ -1,0 +1,21 @@
+{
+  "name": "hasura-auto-tracker",
+  "version": "1.0.0",
+  "description": "Auto track SQL entities and generate views for JSON data ",
+  "main": "server.js",
+  "repository": "https://github.com/axis-tech/hasura-auto-tracker",
+  "author": "AxisTech and NamSource",
+  "license": "GNU",
+  "scripts": {
+    "start": "nodemon --experimental-modules --exec babel-node ."
+  },
+  "dependencies": {
+    "axios": "^0.18.0",
+    "nodemon": "^1.18.10"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.3.4",
+    "@babel/node": "^7.2.2",
+    "@babel/preset-env": "^7.3.4"
+  }
+}

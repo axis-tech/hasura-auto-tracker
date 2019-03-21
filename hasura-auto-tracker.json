@@ -1,10 +1,9 @@
-
     {
         "hasuraEndpoint": "http://localhost:4010/v1/query",
-        "targetSchema": "public",
+        "targetSchema": "hasura_test",
         "views": [
             {
-                "name": "payload",
+                "name": "json_data",
                 "description": "Convert JSON fields into SQL columns",
                 "query": {
                     "select": "SELECT messages.\"messageId\"",
@@ -27,9 +26,19 @@
                             "sqlType": "FLOAT"
                         },
                         {
-                            "jsonName": "station_id",
-                            "sqlName": "station_id",
+                            "jsonName": "humidity",
+                            "sqlName": "humidity",
+                            "sqlType": "FLOAT"
+                        },
+                        {
+                            "jsonName": "windspeed",
+                            "sqlName": "windspeed",
                             "sqlType": "INTEGER"
+                        },
+                        {
+                            "jsonName": "winddirection",
+                            "sqlName": "windspeed",
+                            "sqlType": "VARCHAR"
                         }
                     ]
                 },
