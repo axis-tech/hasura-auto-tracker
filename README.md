@@ -206,7 +206,7 @@ In the `relationships` section at the foot of the JSON, the `srcTable` must be s
 
 ## Example `hasura-auto-tracker` Configuration
 
-Refer to [hasura-auto-tracker.json]()
+Refer to [hasura-auto-tracker.json](https://github.com/axis-tech/hasura-auto-tracker/blob/master/hasura-auto-tracker.json)
 
     {
         "hasuraEndpoint": "http://localhost:4010/v1/query",
@@ -260,7 +260,7 @@ Refer to [hasura-auto-tracker.json]()
 
 # Executing the Configuration Process
 
-Refer to [main.js]()
+Refer to [main.js](https://github.com/axis-tech/hasura-auto-tracker/blob/master/main.js)
 
     import ExecuteHasuraTracker from "./src/hasura/hasura-auto-tracker";
 
