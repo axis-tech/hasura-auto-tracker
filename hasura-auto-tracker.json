@@ -1,0 +1,49 @@
+
+    {
+        "hasuraEndpoint": "http://localhost:4010/v1/query",
+        "targetSchema": "public",
+        "views": [
+            {
+                "name": "payload",
+                "description": "Convert JSON fields into SQL columns",
+                "query": {
+                    "select": "SELECT messages.\"messageId\"",
+                    "from": "FROM public.messages AS messages",
+                    "join": "",
+                    "where": "",
+                    "orderBy": "ORDER BY \"timestamp\""
+                },
+                "columns": {
+                    "jsonColumn": "messages.payload",
+                    "jsonValues": [
+                        {
+                            "jsonName": "timestamp",
+                            "sqlName": "timestamp",
+                            "sqlType": "TIMESTAMP"
+                        },
+                        {
+                            "jsonName": "temperature",
+                            "sqlName": "temperature",
+                            "sqlType": "FLOAT"
+                        },
+                        {
+                            "jsonName": "station_id",
+                            "sqlName": "station_id",
+                            "sqlType": "INTEGER"
+                        }
+                    ]
+                },
+                "relationships": [
+                    {
+                        "type": "create_object_relationship",
+                        "name": "sourceMessage",
+                        "srcKey": "messageId",
+                        "destTable": "messages",
+                        "destKey": "messageId"
+                    }
+                ]
+            }
+        ],
+        "relationships": [
+        ]
+    }
