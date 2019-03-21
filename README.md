@@ -284,13 +284,13 @@ Refer to [main.js](https://github.com/axis-tech/hasura-auto-tracker/blob/master/
 # Advanced Use Cases
 
 ## Relationship naming
-`hasura-auto-tracker` is somewhat oppinionated in terms of SQL column names. The preferred style is tableId, eg messagesId, however, is is a very personal preference.
+`hasura-auto-tracker` is somewhat oppinionated in terms of SQL column names. The preferred style is `tableId`, e.g. `messagesId`, however, this is a very personal preference.
 
-The column names and table names are used as a basis to form the names of Hasura relationships, and poor naming in this sense makes writing queries somewhat less intuitive.
+The column names and table names are used as a basis to form the names of Hasura relationships and poor naming in this sense makes writing queries somewhat less intuitive.
 
-To support a wider range of naming styles, a relationship can include a `name` key, eg. `{... name: "relationship_name", ... }`.
+To support a wider range of naming styles, a relationship can include a `name` key, e.g. `{... name: "relationship_name", ... }`.
 
-Additionally, two functions can be inserted into the configuration option built within the `ExecuteHasuraTracker` method, (refer hasura-auto-tracker.js).
+Additionally, two functions can be inserted into the configuration option built within the `ExecuteHasuraTracker` method, [refer hasura-auto-tracker.js](https://github.com/axis-tech/hasura-auto-tracker/blob/master/hasura-auto-tracker.js).
 
 `getArrayRelationshipName` and `getObjectRelationshipName` will both receive the relationship specification and are expected to return a string that would be a 
 unique name for the relationship. If these functions are not specified `hasura-auto-tracker` will create relationship names but these may either be unsuitable, or may \
