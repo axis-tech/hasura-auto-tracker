@@ -1,0 +1,1 @@
+# hasura-auto-tracker
