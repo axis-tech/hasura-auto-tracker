@@ -1,0 +1,1 @@
+declare module 'hasura-auto-tracker';

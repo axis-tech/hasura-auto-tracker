@@ -2,7 +2,7 @@
     // Example method of loading hasura-auto-tracker configuration and executing the configuration process
     //
     
-    import ExecuteHasuraTracker from "./hasura-auto-tracker";
+    import ExecuteHasuraTracker from "..";
 
     var fs = require('fs');
     var tracker_config;

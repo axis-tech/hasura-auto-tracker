@@ -7,6 +7,36 @@ import axios from "axios";
 // The code also creates SQL views which can translate JSON values into SQL data columns
 //
 
+// hasura-auto-tracker expects primary keys to be named table_id. The '_id' portion is remove to form a compact relationship name. 
+// If this is not your naming convention, provide two functions in the config noted below:
+// getArrayRelationshipName, a functiontion returning a string, which is used as the relationship name
+// getObjectRelationshipName,  a functiontion returning a string, which is used as the relationship name
+
+/*
+
+The functions will receive a parameter of the following specification:
+
+{
+    table1: rel.srcTable,       // The table having the foreign key reference e.g. customer
+    key1: rel.srcKey,           // The name of the column which is the foreign key reference, e.g. order_id
+    table2: rel.destTable,      // The table being referenced, e.g. orders
+    key2: rel.destKey,          // The primary key of the referenced table, e.g. order_id
+    name: rel.name,             // A unique name to be used for the relationship
+
+    // A single call can create relationships in both directions, ie. customer -> orders (one to many / array relationship)
+    // and orders -> customers (one to one / object relationship)
+
+    addArrayRelationship: rel.type == "create_array_relationship",
+    addObjectRelationship: rel.type == "create_object_relationship",
+}
+
+*/
+
+//
+//
+
+const pk_id_string = "_id"
+
 export default async function ExecuteHasuraTracker(inputConfig, logOutput) {
 
     var config = {
@@ -157,8 +187,8 @@ export async function createRelationships(config, relationship) {
             name: relationship.name ? relationship.name :
                 config.getArrayRelationshipName ?
                     config.getArrayRelationshipName(relationship)
-                    : relationship.key1.replace("Id", "") + "_" + relationship.table1,
-            
+                    : relationship.key1.replace(pk_id_string, "") + "_" + relationship.table1,
+
 
             srcTable: relationship.table2,
             srcKey: relationship.key2,
@@ -172,11 +202,11 @@ export async function createRelationships(config, relationship) {
     if (relationship.addObjectRelationship) {
         const obj_rel_spec = {
             type: "create_object_relationship",
-            
+
             name: relationship.name ? relationship.name :
                 config.getObjectRelationshipName ?
                     config.getObjectRelationshipName(relationship)
-                    : relationship.table1 + "_" + relationship.key1.replace("Id", ""),
+                    : relationship.table1 + "_" + relationship.key1.replace(pk_id_string, ""),
 
             srcTable: relationship.table1,
             srcKey: relationship.key1,
