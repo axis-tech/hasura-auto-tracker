@@ -1,9 +1,13 @@
 # hasura-auto-tracker
+[![NPM](https://nodei.co/npm/hasura-auto-tracker.png)](https://nodei.co/npm/hasura-auto-tracker/)
+
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
+# Help
 
 * [README.md](https://github.com/axis-tech/hasura-auto-tracker/blob/master/README.md) - Overview, supporters, problem statement and solution overview
 
 * [WIKI](https://github.com/axis-tech/hasura-auto-tracker/wiki) - Quick start guide with example database and test data
-
 
 
 # About hasura-auto-tracker
@@ -282,12 +286,6 @@ Refer to [main.js](https://github.com/axis-tech/hasura-auto-tracker/blob/master/
 
     // Execute the tracker configuration
     ExecuteHasuraTracker(tracker_config, tracker_log);
-
-# Dependencies 
-
-- An Hasura endpoint must exist and be accessible
-
-- [Axios](https://github.com/axios) used  to execute Hasura API calls
 
 # Advanced Use Cases
 
