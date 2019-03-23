@@ -2,7 +2,7 @@
 // Example method of loading hasura-auto-tracker configuration and executing the configuration process
 //
 
-const HasuraAutoTracker = require("./index.js");
+const HasuraAutoTracker = require("../index.js");
 
 var fs = require('fs');
 var tracker_config;
