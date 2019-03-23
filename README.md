@@ -206,7 +206,7 @@ In the `relationships` section at the foot of the JSON, the `srcTable` must be s
 
 ## Example `hasura-auto-tracker` Configuration
 
-Refer to [hasura-auto-tracker.json](https://github.com/axis-tech/hasura-auto-tracker/blob/master/hasura-auto-tracker.json)
+Refer to [hasura-auto-tracker.json](https://github.com/axis-tech/hasura-auto-tracker/blob/master/example/hasura-auto-tracker.json)
 
     {
         "hasuraEndpoint": "http://localhost:4010/v1/query",
@@ -260,7 +260,7 @@ Refer to [hasura-auto-tracker.json](https://github.com/axis-tech/hasura-auto-tra
 
 # Executing the Configuration Process
 
-Refer to [main.js](https://github.com/axis-tech/hasura-auto-tracker/blob/master/main.js)
+Refer to [main.js](https://github.com/axis-tech/hasura-auto-tracker/blob/master/example/server.js)
 
     import ExecuteHasuraTracker from "./src/hasura/hasura-auto-tracker";
 
@@ -290,7 +290,7 @@ The column names and table names are used as a basis to form the names of Hasura
 
 To support a wider range of naming styles, a relationship can include a `name` key, e.g. `{... name: "relationship_name", ... }`.
 
-Additionally, two functions can be inserted into the configuration option built within the `ExecuteHasuraTracker` method, [refer hasura-auto-tracker.js](https://github.com/axis-tech/hasura-auto-tracker/blob/master/hasura-auto-tracker.js).
+Additionally, two functions can be inserted into the configuration option built within the `ExecuteHasuraTracker` method, [refer hasura-auto-tracker.js](https://github.com/axis-tech/hasura-auto-tracker/blob/master/index.js).
 
 `getArrayRelationshipName` and `getObjectRelationshipName` will both receive the relationship specification and are expected to return a string that would be a 
 unique name for the relationship. If these functions are not specified `hasura-auto-tracker` will create relationship names but these may either be unsuitable, or may \
