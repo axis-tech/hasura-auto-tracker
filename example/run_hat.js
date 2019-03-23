@@ -3,14 +3,11 @@
 //
 
 const HasuraAutoTracker = require("../index.js");
-
-var fs = require('fs');
-var tracker_config;
-var tracker_log = true; // If true, writes status messages to console
+const tracker_log = true; // If true, writes status messages to console
+const fs = require('fs');
 
 fs.readFile("./hasura-auto-tracker.json", (err, data) => {
-    tracker_config = JSON.parse(data.toString());
-
+    var tracker_config = JSON.parse(data.toString());
     const hat = new HasuraAutoTracker();
 
     // Execute the tracker configuration
