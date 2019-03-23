@@ -1,6 +1,6 @@
 {
   "name": "hasura-auto-tracker",
-  "version": "1.5.8",
+  "version": "1.5.9",
   "description": "Automatically configure Hasura tracking and generate additional tracked SQL views, e.g. views which expose JSON data as SQL columns",
   "main": "index.js",
   "repository": {
