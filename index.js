@@ -1,4 +1,4 @@
-import axios from "axios";
+const axios = require("axios");
 
 //
 // The purpose of this code is to allow the caller to track all Postgres tables, views and relationships with a single call
@@ -32,9 +32,6 @@ The functions will receive a parameter of the following specification:
 
 */
 
-//
-//
-
 const pk_id_string = "_id"
 
 export default async function ExecuteHasuraTracker(inputConfig, logOutput) {
@@ -62,10 +59,9 @@ export default async function ExecuteHasuraTracker(inputConfig, logOutput) {
     if (config.views) {
         tracker_log(config, "CREATE SQL VIEWS FOR MESSAGE PAYLOADS");
         tracker_log(config, "");
-        await generateJsonViews(config, config.views);
+        await generateViews(config, config.views);
         tracker_log(config, "");
     }
-
 
     var table_sql =
         `
@@ -132,7 +128,7 @@ export default async function ExecuteHasuraTracker(inputConfig, logOutput) {
 
 // --------------------------------------------------------------------------------------------------------------------------
 // Configure HASURA to track all tables and views in the specified schema -> 'HASURA_AUTO_TRACKER'
-export async function trackTables(config, tables) {
+async function trackTables(config, tables) {
 
     tables.map(async (table_name) => {
         tracker_log(config, "TRACKING - " + table_name);
@@ -167,7 +163,7 @@ export async function trackTables(config, tables) {
 // --------------------------------------------------------------------------------------------------------------------------
 // Configure HASURA to track all relationships
 // This requires an array relationship in one direction and an object relationship in the opposite direction
-export async function trackRelationships(config, relationships) {
+async function trackRelationships(config, relationships) {
     relationships.map(async (relationship) => {
         await createRelationships(config, relationship);
     });
@@ -177,7 +173,7 @@ export async function trackRelationships(config, relationships) {
 // It is possible to pass in two functions, which should generate the name of the relationship:
 // getArrayRelationshipName  - Must return a string, used as the name of array relationships
 // getObjectRelationshipName - Must return a string, used as the name of object relationships
-export async function createRelationships(config, relationship) {
+async function createRelationships(config, relationship) {
 
     if (relationship.addArrayRelationship) {
         const array_rel_spec = {
@@ -233,7 +229,7 @@ export async function createRelationships(config, relationship) {
     }, { }....
 ]
 */
-export async function createRelationship(config, relSpec) {
+async function createRelationship(config, relSpec) {
     tracker_log(config, "TRACKING RELATIONSHIP - " + relSpec.type + "  name:" + relSpec.name);
 
     var hasuraApiRelationshipType = {
@@ -282,7 +278,7 @@ export async function createRelationship(config, relSpec) {
 
 //--------------------------------------------------------------------------------------------------------------------------
 // Create Postgres views that flatten JSON payloads into SQL columns
-async function generateJsonViews(config) {
+async function generateViews(config) {
     config.views.map(async (view) => {
         await generateJsonView(config, view);
     });
@@ -291,7 +287,7 @@ async function generateJsonViews(config) {
 
 //--------------------------------------------------------------------------------------------------------------------------
 // Create the view: DROP if exists, create view, add comment to view
-async function generateJsonView(config, view) {
+async function generateView(config, view) {
     tracker_log(config, "CREATE VIEW - " + view.name);
 
     view.relationships.map(relationship => {
