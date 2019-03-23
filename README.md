@@ -272,20 +272,19 @@ Refer to [hasura-auto-tracker.json](https://github.com/axis-tech/hasura-auto-tra
 
 # Executing the Configuration Process
 
-Refer to [main.js](https://github.com/axis-tech/hasura-auto-tracker/blob/master/example/server.js)
+Refer to [run_hat.js](https://github.com/axis-tech/hasura-auto-tracker/blob/master/example/run_hat.js)
 
-    import ExecuteHasuraTracker from "./src/hasura/hasura-auto-tracker";
+const HasuraAutoTracker = require("../index.js");
+const tracker_log = true; // If true, writes status messages to console
+const fs = require('fs');
 
-    var fs = require('fs');
-    var tracker_config;
-    var tracker_log = true; // If true, writes status messages to console
-
-    fs.readFile("./src/hasura/tracker-config.json", (err, data) => {
-        tracker_config = JSON.parse(data.toString());
-    });
+fs.readFile("./hasura-auto-tracker.json", (err, data) => {
+    var tracker_config = JSON.parse(data.toString());
+    const hat = new HasuraAutoTracker();
 
     // Execute the tracker configuration
-    ExecuteHasuraTracker(tracker_config, tracker_log);
+    hat.ExecuteHasuraAutoTracker(tracker_config, tracker_log);
+});
 
 # Advanced Use Cases
 
