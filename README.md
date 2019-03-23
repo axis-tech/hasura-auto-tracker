@@ -1,5 +1,13 @@
 # hasura-auto-tracker
 
+* [README.md](https://github.com/axis-tech/hasura-auto-tracker/blob/master/README.md) - Overview, supporters, problem statement and solution overview
+
+* [WIKI](https://github.com/axis-tech/hasura-auto-tracker/wiki) - Quick start guide with example database and test data
+
+
+
+# About hasura-auto-tracker
+
 `hasura-auto-tracker` is a tool to automatically configure Hasura tracking features, and additionally generates SQL views to expose JSON values as SQL columns. 
 
 In the absence of `hasura-auto-tracker` developers are required to create custom code and SQL scripts, and also manually configure Hasura through its user interface.
