@@ -3,6 +3,9 @@
   "version": "1.5.9",
   "description": "Automatically configure Hasura tracking and generate additional tracked SQL views, e.g. views which expose JSON data as SQL columns",
   "main": "index.js",
+  "bin": {
+    "hasura-auto-tracker": "./cli.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/axis-tech/hasura-auto-tracker.git"
@@ -10,7 +13,8 @@
   "author": "NamSource Pty Ltd - www.namsource.com",
   "license": "GPL-3.0",
   "dependencies": {
-    "axios": "^0.18.0"
+    "axios": "^0.18.0",
+    "minimist": "^1.2.0"
   },
   "bugs": {
     "url": "https://github.com/axis-tech/hasura-auto-tracker/issues"
