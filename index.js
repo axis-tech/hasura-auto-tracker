@@ -37,8 +37,10 @@ class HasuraAutoTracker {
     constructor() { }
 
     async ExecuteHasuraAutoTracker(config) {
+        // Refer to the documentation - the defauly expectation is that primary / foreign key names are suffixed with _id
+        // The suffix (e.g. '_id') is removed and the remaining text is used in naming relationships
         if (!config.primaryKeySuffix) {
-            primaryKeySuffix = "_id";
+            config.primaryKeySuffix = "_id";
         }
 
         this.tracker_log(config, "--------------------------------------------------------------");
