@@ -5,6 +5,16 @@
 
 # Help
 
+## Install hasura-auto-tracker in your project
+npm install hasura-auto-tracker
+
+## Execute hasura-auto-tracker from the command line
+npm install --global hasura-auto-tracker
+
+hasura-auto-tracker --hasuraEndpoint http://localhost:8080/v1/query
+
+## Documentation
+
 * [README.md](https://github.com/axis-tech/hasura-auto-tracker/blob/master/README.md) - Overview, supporters, problem statement and solution overview
 
 * [WIKI](https://github.com/axis-tech/hasura-auto-tracker/wiki) - Quick start guide with example database and test data
