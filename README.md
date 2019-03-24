@@ -311,7 +311,7 @@ If the config contains null values for `getArrayRelationshipName` and `getObject
 
 ### Default Configuration Code
 
-In simple use cases, the defaut setup code will suffice:
+In simple use cases, the default setup code will suffice:
 
     fs.readFile(configFile, (err, data) => {
         if (!data) {
