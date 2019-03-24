@@ -1,8 +1,20 @@
     {
         "hasuraEndpoint": "http://localhost:4010/v1/query",
         "targetSchema": "hasura_test",
-        "primaryKeySuffix":"Id",
+        "primaryKeySuffix": "Id",
         "logOutput": true,
+        "scripts": {
+            "beforeViews": [
+                {
+                    "source": "./example/beforeViews.sql"
+                }
+            ],
+            "afterViews": [
+                {
+                    "source": "./example/afterViews.sql"
+                }
+            ]
+        },
         "views": [
             {
                 "name": "json_data",

@@ -32,6 +32,8 @@ The functions will receive a parameter of the following specification:
 
 */
 
+const fs = require('fs');
+
 class HasuraAutoTracker {
 
     constructor() { }
@@ -55,14 +57,36 @@ class HasuraAutoTracker {
         this.tracker_log(config, "--------------------------------------------------------------");
         this.tracker_log(config, "");
 
+
         // --------------------------------------------------------------------------------------------------------------------------
-        // Create additional views to flatten JSON to SQL
+        // Execute SQL scripts required before view creation
+        if (config.scripts && config.scripts.beforeViews) {
+            this.tracker_log(config, "EXECUTE SQL SCRIPTS BEFORE VIEW CREATION");
+            this.tracker_log(config, "");
+            await this.executeScripts(config, config.scripts.beforeViews);
+            this.tracker_log(config, "");
+        }
+
+
+        // --------------------------------------------------------------------------------------------------------------------------
+        // Create SQL views, these scripts can also flatten JSON values to SQL columns
         if (config.views) {
             this.tracker_log(config, "CREATE SQL VIEWS FOR MESSAGE PAYLOADS");
             this.tracker_log(config, "");
             await this.generateViews(config, config.views);
             this.tracker_log(config, "");
         }
+
+
+        // --------------------------------------------------------------------------------------------------------------------------
+        // Execute SQL scripts required after view creation
+        if (config.scripts && config.scripts.afterViews) {
+            this.tracker_log(config, "EXECUTE SQL SCRIPTS AFTER VIEW CREATION");
+            this.tracker_log(config, "");
+            await this.executeScripts(config, config.scripts.afterViews);
+            this.tracker_log(config, "");
+        }
+
 
         var table_sql =
             `
@@ -281,6 +305,29 @@ class HasuraAutoTracker {
             this.tracker_log(config, "");
             this.tracker_log(config, e.response.data);
             this.tracker_log(config, "");
+        });
+    }
+
+
+    //--------------------------------------------------------------------------------------------------------------------------
+    // Execute a list of SQL scripts
+    async executeScripts(config, scripts) {
+
+        scripts.map(async (s) => {
+
+            fs.readFile(s.source, (err, data) => {
+                if (err) throw err;
+
+                console.log("EXECUTE SQL SCRIPT - " + s.source);
+
+                var content = data.toString();
+
+                if (content.trim().length > 0) {
+                    this.runSQL_Query(config, content);
+                }
+
+            });
+
         });
     }
 
