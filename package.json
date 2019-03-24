@@ -1,8 +1,11 @@
 {
   "name": "hasura-auto-tracker",
   "version": "1.6.1",
-  "description": "Automatically configure Hasura tracking and generate additional tracked SQL views, e.g. views which expose JSON data as SQL columns",
+  "description": "Automatically configure Hasura tracking and generate additional tracked SQL views, e.g. views which can expose JSON data as SQL columns",
   "main": "example/run_hat.js",
+  "bin": {
+    "hasura-auto-tracker": "./cli.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/axis-tech/hasura-auto-tracker.git"
@@ -14,7 +17,8 @@
     "updatenpm": "npm publish --access=public"
   },
   "dependencies": {
-    "axios": "^0.18.0"
+    "axios": "^0.18.0",
+    "minimist": "^1.2.0"
   },
   "devDependencies": {
     "express": "^4.16.4",
