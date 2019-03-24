@@ -5,6 +5,9 @@
 
 # Help
 
+## Release Notes
+You can view the release notes here: [RELEASE NOTES](https://github.com/axis-tech/hasura-auto-tracker/wiki/Release-Notes)
+
 ## Install hasura-auto-tracker in your project
 npm install hasura-auto-tracker
 
