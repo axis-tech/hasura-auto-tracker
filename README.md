@@ -39,6 +39,8 @@ In the absence of `hasura-auto-tracker` developers are required to create custom
 
 - Provide an extensible means of specifying custom relationship names
 
+- Execute collections of SQL scripts to enable database task automation during the build process
+
 - Integrate Hasura configuration into a continuous integration / delivery process
 
 # Proud Hasura Supporters
@@ -236,6 +238,10 @@ Refer to [hasura-auto-tracker.json](https://github.com/axis-tech/hasura-auto-tra
     {
         "hasuraEndpoint": "http://localhost:4010/v1/query",
         "targetSchema": "public",
+        "scripts": {
+            "beforeViews": ["sql_script1.sql", "sql_script2.sql"],
+            "afterViews": ["after_init.sql"]},
+            },
         "views": [
             {
                 "name": "payload",
@@ -280,6 +286,40 @@ Refer to [hasura-auto-tracker.json](https://github.com/axis-tech/hasura-auto-tra
         ],
         "relationships": [
         ]
+    }
+
+## Configuration sections to enable bulk SQL script execution
+This feature can be usef for a variety of purposes including:
+
+* Create functions required by the additional views built from the `scripts` section
+* Generate test data
+* Automate database tasks after a build has occurred
+
+The  `scripts` section comprises a `beforeViews` and `afterViews` section as indicated below...
+
+    {
+    "hasuraEndpoint": "http://localhost:4010/v1/query",
+    "targetSchema": "hasura_test",
+    "primaryKeySuffix": "Id",
+    "logOutput": true,
+    "scripts": {
+        // An array of filenames - SQL scripts to be executed in the specified sequence
+        // These scripts will be executed before additional views are created
+        "beforeViews": [
+            {
+                "source": "./example/beforeViews.sql"
+            }
+        ],
+
+        // An array of filenames - SQL scripts to be executed in the specified sequence
+        // These scripts will be executed after additional views are created
+        "afterViews": [
+            {
+                "source": "./example/afterViews.sql"
+            }
+        ]
+    },
+    "views"...
     }
 
 
