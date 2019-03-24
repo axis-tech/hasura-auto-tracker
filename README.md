@@ -289,28 +289,48 @@ fs.readFile("./hasura-auto-tracker.json", (err, data) => {
 # Advanced Use Cases
 
 ## Relationship naming
-`hasura-auto-tracker` is somewhat oppinionated in terms of SQL column names. The preferred style is `tableId`, e.g. `messagesId`, however, this is a very personal preference.
+
+### Automatic Name Generation
+`hasura-auto-tracker` will automatically generate names for relationships based on the keys and tables involved.
+
+Foreign key names can use a variety of styles, such as `customerId` and `customer_id`. `hasura-auto-tracker` will attempt to optimise the name of relationships by dropping the common suffix used in the primary/foreign key names, for example, `customer_id` will become `customer`, so that in the relationship between customers and orders a more succint relationship name will be formed, `customer_orders`.
 
 The column names and table names are used as a basis to form the names of Hasura relationships and poor naming in this sense makes writing queries somewhat less intuitive.
 
-To support a wider range of naming styles, a relationship can include a `name` key, e.g. `{... name: "relationship_name", ... }`.
+A relationship specification (in the JSON configuration) can optionally include a `name` key, e.g. `{... name: "relationship_name", ... }`. The specified relationship name will be used, and care must be taken to ensure this is unique in the schema.
 
-Additionally, two functions can be inserted into the configuration option built within the `ExecuteHasuraTracker` method, [refer hasura-auto-tracker.js](https://github.com/axis-tech/hasura-auto-tracker/blob/master/index.js).
+### Custom name Generation
+Two functions can be inserted into the configuration option built within the `ExecuteHasuraTracker` method, [refer hasura-auto-tracker.js](https://github.com/axis-tech/hasura-auto-tracker/blob/master/index.js).
 
-`getArrayRelationshipName` and `getObjectRelationshipName` will both receive the relationship specification and are expected to return a string that would be a 
-unique name for the relationship. If these functions are not specified `hasura-auto-tracker` will create relationship names but these may either be unsuitable, or may \
-prove to be non-unique due to the existence of other database entities / relationships.
+* `getArrayRelationshipName` - If specified, this method is called to create a name for an Array Relationship (one to many)
+* `getObjectRelationshipName`  - If specified, this method is called to create a name for an Object Relationship (one to one)
 
-If the config contains null values for `getArrayRelationshipName` and `getObjectRelationshipName`, then `hasura-auto-tracker` will take full responsibility for naming relationships.
+Both functions receive a relationship specification and are expected to return a string specifying a unique name for the relationship. 
 
-In simple use cases, with the assumed naming convention of `keyId`, `hasura-auto-tracker` should be successful in providing intuitively named relationships.
+If the config contains null values for `getArrayRelationshipName` and `getObjectRelationshipName`, then `hasura-auto-tracker` will take full responsibility for naming relationships as described above.
 
-    var config = {
-        ...inputConfig,
-        getArrayRelationshipName: null,
-        getObjectRelationshipName: null,
-        logOutput: logOutput
-    };
+### Default Configuration Code
+
+In simple use cases, the defaut setup code will suffice:
+
+    fs.readFile(configFile, (err, data) => {
+        if (!data) {
+            throw "Failed to read " + configFile;
+        }
+
+        var config = JSON.parse(data.toString());
+    
+        var tracker_config = {
+            ...config,
+            getArrayRelationshipName: null, // Add your own function(relationship_spec) - return a string
+            getObjectRelationshipName: null // Add your own function(relationship_spec) - return a string
+        };
+
+    const hat = new HasuraAutoTracker();
+
+    // Execute the tracker configuration
+    hat.ExecuteHasuraAutoTracker(tracker_config);
+});
 
 # Disclaimer
 
