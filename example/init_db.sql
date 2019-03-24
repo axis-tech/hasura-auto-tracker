@@ -69,20 +69,21 @@ VALUES
 
 INSERT INTO hasura_test.devices
 ("deviceId", "customerId", "name","description")
-VALUES (1, 1, 'Weather 1', 'London'),
-(2, 1, 'Weather 2', 'Leeds'),
-(3, 1, 'Weather 3', 'Cardiff'),
-(4, 1, 'Weather 4', 'Belfast'),
+VALUES 
+(1, 1,  'UK_WS_IOT_001', 'London'),
+(2, 1,  'UK_WS_IOT_002', 'Leeds'),
+(3, 1,  'UK_WS_IOT_003', 'Cardiff'),
+(4, 1,  'UK_WS_IOT_004', 'Belfast'),
 
-(5, 2, 'Weather WE001', 'Madrid'),
-(6, 2, 'Weather WE002', 'Barcelona'),
-(7, 2, 'Weather WE003', 'Marbella'),
+(5, 2,  'Weather ES001', 'Madrid'),
+(6, 2,  'Weather ES002', 'Barcelona'),
+(7, 2,  'Weather ES003', 'Marbella'),
 
-(8, 3, 'Weather WE003', 'Perth'),
-(9, 3, 'Weather WE003', 'Sydney'),
-(10, 3, 'Weather WE003', 'Darwin'),
+(8, 3,  'Weather AU001', 'Perth'),
+(9, 3,  'Weather AU002', 'Sydney'),
+(10, 3, 'Weather AU003', 'Darwin'),
 
-(11, 4, 'Weather WE003', 'Tokyo')
+(11, 4, 'Weather KP_TK_001', 'Tokyo')
 ;
 
 
@@ -118,5 +119,4 @@ VALUES
 (18, NOW(), 6, '{ "temperature": 27.3, "humidity": 30, "windspeed": 10, "winddirection": "NE" }'),
 (19, NOW(), 7, '{ "temperature": 28.5, "humidity": 40, "windspeed": 15, "winddirection": "NW" }'),
 (20, NOW(), 8, '{ "temperature": 31.2, "humidity": 50, "windspeed": 20, "winddirection": "NW" }')
-
 ;
