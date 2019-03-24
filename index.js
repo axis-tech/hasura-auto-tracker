@@ -32,8 +32,6 @@ The functions will receive a parameter of the following specification:
 
 */
 
-var pk_id_string = "_id"
-
 class HasuraAutoTracker {
 
     constructor() { }
@@ -47,6 +45,10 @@ class HasuraAutoTracker {
             logOutput: logOutput
         };
 
+        if (!config.primaryKeySuffix) {
+            primaryKeySuffix = "_id";
+        }
+
         this.tracker_log(config, "--------------------------------------------------------------");
         this.tracker_log(config, "");
         this.tracker_log(config, "hasura-auto-tracker  : TRACK TABLES, VIEWS AND RELATIONSHIPS");
@@ -54,6 +56,7 @@ class HasuraAutoTracker {
         this.tracker_log(config, "");
         this.tracker_log(config, "              SCHEMA : '" + config.targetSchema + "'");
         this.tracker_log(config, "     HASURA ENDPOINT : '" + config.hasuraEndpoint + "'");
+        this.tracker_log(config, "  PRIMARY KEY SUFFIX : '" + config.primaryKeySuffix + "'");
         this.tracker_log(config, "");
         this.tracker_log(config, "--------------------------------------------------------------");
         this.tracker_log(config, "");
@@ -168,6 +171,13 @@ class HasuraAutoTracker {
     // Configure HASURA to track all relationships
     // This requires an array relationship in one direction and an object relationship in the opposite direction
     async  trackRelationships(config, relationships) {
+
+        if ((!config.primaryKeySuffix || config.primaryKeySuffix.trim() == "") &&
+            (!config.getArrayRelationshipName || !getObjectRelationshipName)
+        ) {
+            throw "'config.primaryKeySuffix' is not specified. Both config.getArrayRelationshipName and config.getObjectRelationshipName are required.";
+        }
+
         relationships.map(async (relationship) => {
             await this.createRelationships(config, relationship);
         });
@@ -187,7 +197,7 @@ class HasuraAutoTracker {
                 name: relationship.name ? relationship.name :
                     config.getArrayRelationshipName ?
                         config.getArrayRelationshipName(relationship)
-                        : relationship.key1.replace(pk_id_string, "") + "_" + relationship.table1,
+                        : relationship.key1.replace(config.primaryKeySuffix, "") + "_" + relationship.table1,
 
 
                 srcTable: relationship.table2,
@@ -206,7 +216,7 @@ class HasuraAutoTracker {
                 name: relationship.name ? relationship.name :
                     config.getObjectRelationshipName ?
                         config.getObjectRelationshipName(relationship)
-                        : relationship.table1 + "_" + relationship.key1.replace(pk_id_string, ""),
+                        : relationship.table1 + "_" + relationship.key1.replace(config.primaryKeySuffix, ""),
 
                 srcTable: relationship.table1,
                 srcKey: relationship.key1,
@@ -311,13 +321,18 @@ COMMENT ON VIEW "${config.targetSchema}"."${view.name}" IS '${view.description}'
 `;
 
         // Build the SQL statement according to the specified JSON columns
+        // The columns list is optional
         var view_columns = ""
 
-        view.columns.jsonValues.map(col => {
-            view_columns +=
-                `
+        if (view.columns) {
+
+            view.columns.jsonValues.map(col => {
+                view_columns +=
+                    `
 CAST(${view.columns.jsonColumn} ->> '${col.jsonName}' AS ${col.sqlType}) AS "${col.sqlName}",`;
-        });
+            });
+
+        }
 
         var sql_statement = `
         ${view_header}
