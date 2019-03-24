@@ -2,6 +2,7 @@
         "hasuraEndpoint": "http://localhost:4010/v1/query",
         "targetSchema": "hasura_test",
         "primaryKeySuffix":"Id",
+        "logOutput": true,
         "views": [
             {
                 "name": "json_data",

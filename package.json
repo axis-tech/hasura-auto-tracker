@@ -1,6 +1,6 @@
 {
   "name": "hasura-auto-tracker",
-  "version": "1.5.9",
+  "version": "1.6.1",
   "description": "Automatically configure Hasura tracking and generate additional tracked SQL views, e.g. views which expose JSON data as SQL columns",
   "main": "example/run_hat.js",
   "repository": {
@@ -10,7 +10,8 @@
   "author": "NamSource Pty Ltd - www.namsource.com",
   "license": "GPL-3.0",
   "scripts": {
-    "start": "nodemon --exec babel-node ."
+    "start": "nodemon --exec babel-node .",
+    "updatenpm": "npm publish --access=public"
   },
   "dependencies": {
     "axios": "^0.18.0"

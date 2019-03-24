@@ -36,15 +36,7 @@ class HasuraAutoTracker {
 
     constructor() { }
 
-    async ExecuteHasuraAutoTracker(inputConfig, logOutput) {
-
-        var config = {
-            ...inputConfig,
-            getArrayRelationshipName: null,  // Add your own function(relationship_spec) - return a string
-            getObjectRelationshipName: null, // Add your own function(relationship_spec) - return a string
-            logOutput: logOutput
-        };
-
+    async ExecuteHasuraAutoTracker(config) {
         if (!config.primaryKeySuffix) {
             primaryKeySuffix = "_id";
         }
@@ -52,7 +44,7 @@ class HasuraAutoTracker {
         this.tracker_log(config, "--------------------------------------------------------------");
         this.tracker_log(config, "");
         this.tracker_log(config, "hasura-auto-tracker  : TRACK TABLES, VIEWS AND RELATIONSHIPS");
-        this.tracker_log(config, "                     : GENERATE ADDITIONAL VIEWS FOR JSON DATA");
+        this.tracker_log(config, "                     : GENERATE ADDITIONAL SQL VIEWS");
         this.tracker_log(config, "");
         this.tracker_log(config, "              SCHEMA : '" + config.targetSchema + "'");
         this.tracker_log(config, "     HASURA ENDPOINT : '" + config.hasuraEndpoint + "'");

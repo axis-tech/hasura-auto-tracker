@@ -3,7 +3,6 @@
 //
 
 const HasuraAutoTracker = require("../index.js");
-const tracker_log = true; // If true, writes status messages to console
 const fs = require('fs');
 const configFile = "./example/hasura-auto-tracker.json";
 
@@ -12,10 +11,18 @@ fs.readFile(configFile, (err, data) => {
         throw "Failed to read " + configFile;
     }
 
-    var tracker_config = JSON.parse(data.toString());
+    var config = JSON.parse(data.toString());
+    
+    var tracker_config = {
+        ...config,
+        getArrayRelationshipName: null,  // Add your own function(relationship_spec) - return a string
+        getObjectRelationshipName: null // Add your own function(relationship_spec) - return a string
+    };
+
+
     const hat = new HasuraAutoTracker();
 
     // Execute the tracker configuration
-    hat.ExecuteHasuraAutoTracker(tracker_config, tracker_log);
+    hat.ExecuteHasuraAutoTracker(tracker_config);
 });
 
