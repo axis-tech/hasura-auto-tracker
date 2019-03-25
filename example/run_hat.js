@@ -13,13 +13,19 @@ fs.readFile(configFile, (err, data) => {
 
     var config = JSON.parse(data.toString());
 
+    // Support execution of individual commands from CLI
+    if (!config.operations) {
+        config.operations = {};
+        config.operations.untrack = true;
+        config.operations.trackTables = true;
+        config.operations.trackRelationships = true;
+    }
+
     var tracker_config = {
         ...config,
         getArrayRelationshipName: null,  // Add your own function(relationship_spec) - return a string
         getObjectRelationshipName: null // Add your own function(relationship_spec) - return a string
     };
-
-    console.log(tracker_config);
 
     const hat = new HasuraAutoTracker();
 
