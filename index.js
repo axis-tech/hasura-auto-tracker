@@ -406,9 +406,11 @@ class HasuraAutoTracker {
     generateView(config, view) {
         this.tracker_log(config, "CREATE VIEW - " + view.name);
 
-        view.relationships.map(relationship => {
-            config.relationships.push({ ...relationship, srcTable: view.name });
-        });
+        if (view.relationships) {
+            view.relationships.map(relationship => {
+                config.relationships.push({ ...relationship, srcTable: view.name });
+            });
+        }
 
         const view_header =
             `
@@ -426,6 +428,7 @@ COMMENT ON VIEW "${config.targetSchema}"."${view.name}" IS '${view.description}'
         var view_columns = ""
 
         if (view.columns) {
+            var view_columns = ","
 
             view.columns.jsonValues.map(col => {
                 view_columns +=
@@ -437,7 +440,7 @@ CAST(${view.columns.jsonColumn} ->> '${col.jsonName}' AS ${col.sqlType}) AS "${c
 
         var sql_statement = `
  ${view_header}
- ${view.query.select.trim().replace(/,\s*$/, "")},
+ ${view.query.select.trim().replace(/,\s*$/, "")}
  ${view_columns.trim().replace(/,\s*$/, "")}
  ${view.query.from}
  ${view.query.join}
