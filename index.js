@@ -7,42 +7,30 @@ const axios = require("axios");
 // The code also creates SQL views which can translate JSON values into SQL data columns
 //
 
-// hasura-auto-tracker expects primary keys to be named table_id. The '_id' portion is remove to form a compact relationship name. 
-// If this is not your naming convention, provide two functions in the config noted below:
-// getArrayRelationshipName, a functiontion returning a string, which is used as the relationship name
-// getObjectRelationshipName, a functiontion returning a string, which is used as the relationship name
-
-/*
-
-The functions will receive a parameter of the following specification:
-
-{
- table1: rel.srcTable, // The table having the foreign key reference e.g. customer
- key1: rel.srcKey, // The name of the column which is the foreign key reference, e.g. order_id
- table2: rel.destTable, // The table being referenced, e.g. orders
- key2: rel.destKey, // The primary key of the referenced table, e.g. order_id
- name: rel.name, // A unique name to be used for the relationship
-
- // A single call can create relationships in both directions, ie. customer -> orders (one to many / array relationship)
- // and orders -> customers (one to one / object relationship)
-
- addArrayRelationship: rel.type == "create_array_relationship",
- addObjectRelationship: rel.type == "create_object_relationship",
-}
-
-*/
-
 const fs = require('fs');
 
 class HasuraAutoTracker {
 
+    //---------------------------------------------------------------------------------------------------------------------------
+    // Default constructor
     constructor() { }
 
+
+    //---------------------------------------------------------------------------------------------------------------------------
+    // Entry point
     ExecuteHasuraAutoTracker(config) {
         // Refer to the documentation - the defauly expectation is that primary / foreign key names are suffixed with _id
         // The suffix (e.g. '_id') is removed and the remaining text is used in naming relationships
         if (!config.primaryKeySuffix) {
             config.primaryKeySuffix = "_id";
+        }
+
+        if (!config.getArrayRelationshipName) {
+            config.getArrayRelationshipName = this.createDefaultArrayRelationshipName;
+        }
+
+        if (!config.getObjectRelationshipName) {
+            config.getObjectRelationshipName = this.createDefaultObjectRelationshipName;
         }
 
 
@@ -154,6 +142,18 @@ class HasuraAutoTracker {
     }
 
 
+    //---------------------------------------------------------------------------------------------------------------------------
+    // Default relationship name builders
+    createDefaultArrayRelationshipName(config, relationship) {
+        return relationship.key1.replace(config.primaryKeySuffix, "") + "_" + relationship.table1;
+    }
+
+
+    createDefaultObjectRelationshipName(config, relationship) {
+        return relationship.table1 + "_" + relationship.key1.replace(config.primaryKeySuffix, "");
+    }
+
+
     // --------------------------------------------------------------------------------------------------------------------------
     // Configure HASURA to track all tables and views in the specified schema -> 'HASURA_AUTO_TRACKER'
     untrackTables(config, tables) {
@@ -261,12 +261,7 @@ class HasuraAutoTracker {
             const array_rel_spec = {
                 type: "create_array_relationship",
 
-
-                name: relationship.name ? relationship.name :
-                    config.getArrayRelationshipName ?
-                        config.getArrayRelationshipName(relationship)
-                        : relationship.key1.replace(config.primaryKeySuffix, "") + "_" + relationship.table1,
-
+                name: relationship.name ? relationship.name : config.getArrayRelationshipName(config, relationship),
 
                 srcTable: relationship.table2,
                 srcKey: relationship.key2,
@@ -281,10 +276,7 @@ class HasuraAutoTracker {
             const obj_rel_spec = {
                 type: "create_object_relationship",
 
-                name: relationship.name ? relationship.name :
-                    config.getObjectRelationshipName ?
-                        config.getObjectRelationshipName(relationship)
-                        : relationship.table1 + "_" + relationship.key1.replace(config.primaryKeySuffix, ""),
+                name: relationship.name ? relationship.name : config.getObjectRelationshipName(config, relationship),
 
                 srcTable: relationship.table1,
                 srcKey: relationship.key1,
@@ -298,22 +290,9 @@ class HasuraAutoTracker {
 
     // --------------------------------------------------------------------------------------------------------------------------
     // Create the specified relationship
-
-    /* Pass an array of array specifications...
-    [
-    {
-    "type": "create_array_relationship" | "create_object_relationship",
-    "name": "relationship_name",
-    "srcTable": "ParentTable",
-    "srcKey": "ForeignKeyName",
-    "destTable": "ChildTable",
-    "destKey": "PrimaryKeyName"
-    }, { }....
-    ]
-    */
-
     createRelationship(config, relSpec) {
         this.tracker_log(config, "TRACKING RELATIONSHIP - " + relSpec.type + " name:" + relSpec.name);
+        this.tracker_log(config, "                      - " + relSpec.srcTable + "." + relSpec.srcKey + " ->  name:" + relSpec.destTable + "." + relSpec.destKey);
 
         var hasuraApiRelationshipType = {
             type: relSpec.type,
@@ -403,6 +382,7 @@ class HasuraAutoTracker {
         this.tracker_log(config, "");
     }
 
+    
     //--------------------------------------------------------------------------------------------------------------------------
     // Create the view: DROP if exists, create view, add comment to view
     generateView(config, view) {
@@ -487,6 +467,7 @@ CAST(${view.columns.jsonColumn} ->> '${col.jsonName}' AS ${col.sqlType}) AS "${c
             });
     }
 
+
     //--------------------------------------------------------------------------------------------------------------------------
     // Execute a GraphQL query via the Hasura API
     runGraphQL_Query(config, query) {
@@ -503,6 +484,9 @@ CAST(${view.columns.jsonColumn} ->> '${col.jsonName}' AS ${col.sqlType}) AS "${c
             });
     }
 
+
+    //--------------------------------------------------------------------------------------------------------------------------
+    // Write log text if output is requested by the config
     tracker_log(config, text) {
         if (!config)
             throw ("config is required");
