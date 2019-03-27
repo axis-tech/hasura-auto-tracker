@@ -59,8 +59,9 @@ if (version) {
 }
 
 let hatConfig = null
-if (fs.existsSync(config)) {
-  hatConfig = require(path.join(__dirname, config))
+const configFile = path.join(process.cwd(), config);
+if (fs.existsSync(configFile)) {
+  hatConfig = require(configFile)
 } else if (hasuraEndpoint) {
   hatConfig = {
     hasuraEndpoint,
@@ -71,6 +72,14 @@ if (fs.existsSync(config)) {
 } else {
   console.log(HELP)
   process.exit()
+}
+
+// Copy from example/run_hat.js
+if (!hatConfig.operations) {
+    hatConfig.operations = {};
+    hatConfig.operations.untrack = true;
+    hatConfig.operations.trackTables = true;
+    hatConfig.operations.trackRelationships = true;
 }
 
 console.log(`hasura-auto-tracker will run with the following configuration:
