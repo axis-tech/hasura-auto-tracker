@@ -6,26 +6,31 @@ const path = require('path')
 
 const HELP = `
 hasura-auto-tracker
-  --config          use a config file if present
-                    defaults to hasura-auto-track.json
+  --config              use a config file if present
+                        defaults to hasura-auto-track.json
 
-  --hasuraEndpoint  the hasura endpoint to connect to
-                    only used when the config file isn't present
-                    eg: http://localhost:8080/v1/query
+  --hasuraEndpoint      the hasura endpoint to connect to
+                        only used when the config file isn't present
+                        eg: http://localhost:8080/v1/query
 
-  --targetSchema    the postgres db target schema to connect to
-                    only used when the config file isn't present
-                    defaults to public
+  --hasuraAdminSecret   the hasura admin secret
+                        to access hasura endpoint
+                        eg: myadminsecretkey
 
-  --silent          don't print logs as the tool runs
-                    defaults to false
+  --targetSchema        the postgres db target schema to connect to
+                        only used when the config file isn't present
+                        defaults to public
 
-  --version         print the version
+  --silent              don't print logs as the tool runs
+                        defaults to false
+
+  --version             print the version
 `
 
 const {
   config,
   hasuraEndpoint,
+  hasuraAdminSecret,
   help,
   targetSchema,
   silent,
@@ -40,6 +45,7 @@ const {
   default: {
     config: 'hasura-auto-tracker.json',
     hasuraEndpoint: null,
+    hasuraAdminSecret: null,
     help: false,
     targetSchema: 'public',
     silent: false,
@@ -65,6 +71,7 @@ if (fs.existsSync(configFile)) {
 } else if (hasuraEndpoint) {
   hatConfig = {
     hasuraEndpoint,
+    hasuraAdminSecret,
     targetSchema,
     views: [],
     relationships: [],
