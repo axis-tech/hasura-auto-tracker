@@ -183,6 +183,8 @@ class HasuraAutoTracker {
 
                     this.tracker_log(config, "GRAPHQL QUERY FAILED TO EXECUTE: ");
                     this.tracker_log(config, "");
+                    this.tracker_log(config, JSON.stringify(query));
+                    this.tracker_log(config, "");
                     this.tracker_log(config, "EXCEPTION DETAILS - untracking " + table_name);
                     this.tracker_log(config, "");
                     this.tracker_log(config, e.response.data);
@@ -218,7 +220,7 @@ class HasuraAutoTracker {
 
                 this.tracker_log(config, "GRAPHQL QUERY FAILED TO EXECUTE: ");
                 this.tracker_log(config, "");
-                this.tracker_log(config, arrRel);
+                this.tracker_log(config, JSON.stringify(query));
                 this.tracker_log(config, "");
                 this.tracker_log(config, "EXCEPTION DETAILS - creating " + currentRelationshipType + " - " + currentRelationshipName);
                 this.tracker_log(config, "");
@@ -347,7 +349,7 @@ class HasuraAutoTracker {
 
             this.tracker_log(config, "GRAPHQL QUERY FAILED TO EXECUTE: ");
             this.tracker_log(config, "");
-            this.tracker_log(config, hasuraApiRelationshipType);
+            this.tracker_log(config, JSON.stringify(hasuraApiRelationshipType));
             this.tracker_log(config, "");
             this.tracker_log(config, "EXCEPTION DETAILS - creating " + relSpec.type + " - " + relSpec.name);
             this.tracker_log(config, "");
