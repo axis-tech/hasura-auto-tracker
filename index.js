@@ -25,6 +25,21 @@ class HasuraAutoTracker {
             config.primaryKeySuffix = "_id";
         }
 
+        this.tracker_log(config, "--------------------------------------------------------------");
+        this.tracker_log(config, "");
+        this.tracker_log(config, "       hasura-auto-tracker : TRACK TABLES, VIEWS AND RELATIONSHIPS");
+        this.tracker_log(config, "                           : GENERATE ADDITIONAL SQL VIEWS");
+        this.tracker_log(config, "");
+        this.tracker_log(config, "        SCHEMA             : '" + config.targetSchema + "'");
+        this.tracker_log(config, "        HASURA ENDPOINT    : '" + config.hasuraEndpoint + "'");
+        this.tracker_log(config, "        PRIMARY KEY SUFFIX : '" + config.primaryKeySuffix + "'");
+        this.tracker_log(config, "");
+        this.tracker_log(config, " Array relationship naming : " + (config.getArrayRelationshipName ? "Custom" : "Default"));
+        this.tracker_log(config, "Object relationship naming : " + (config.getObjectRelationshipName ? "Custom" : "Default"));
+        this.tracker_log(config, "");
+        this.tracker_log(config, "--------------------------------------------------------------");
+        this.tracker_log(config, "");
+
         if (!config.getArrayRelationshipName) {
             config.getArrayRelationshipName = this.createDefaultArrayRelationshipName;
         }
@@ -32,19 +47,6 @@ class HasuraAutoTracker {
         if (!config.getObjectRelationshipName) {
             config.getObjectRelationshipName = this.createDefaultObjectRelationshipName;
         }
-
-
-        this.tracker_log(config, "--------------------------------------------------------------");
-        this.tracker_log(config, "");
-        this.tracker_log(config, "hasura-auto-tracker : TRACK TABLES, VIEWS AND RELATIONSHIPS");
-        this.tracker_log(config, " : GENERATE ADDITIONAL SQL VIEWS");
-        this.tracker_log(config, "");
-        this.tracker_log(config, " SCHEMA : '" + config.targetSchema + "'");
-        this.tracker_log(config, " HASURA ENDPOINT : '" + config.hasuraEndpoint + "'");
-        this.tracker_log(config, " PRIMARY KEY SUFFIX : '" + config.primaryKeySuffix + "'");
-        this.tracker_log(config, "");
-        this.tracker_log(config, "--------------------------------------------------------------");
-        this.tracker_log(config, "");
 
 
         // --------------------------------------------------------------------------------------------------------------------------
@@ -292,7 +294,8 @@ class HasuraAutoTracker {
     // Create the specified relationship
     createRelationship(config, relSpec) {
         this.tracker_log(config, "TRACKING RELATIONSHIP - " + relSpec.type + " name:" + relSpec.name);
-        this.tracker_log(config, "                      - " + relSpec.srcTable + "." + relSpec.srcKey + " ->  name:" + relSpec.destTable + "." + relSpec.destKey);
+        //        this.tracker_log(config, "                      - " + relSpec.srcTable + "." + relSpec.srcKey + " -> " + relSpec.destTable + "." + relSpec.destKey);
+        //        this.tracker_log(config, "");
 
         var hasuraApiRelationshipType = {
             type: relSpec.type,
@@ -322,9 +325,9 @@ class HasuraAutoTracker {
 
         this.runGraphQL_Query(config, hasuraApiRelationshipType).catch(e => {
 
-            if (e.response.data.error.includes("already exists")) {
-                return;
-            }
+            //            if (e.response.data.error.includes("already exists")) {
+            //                return;
+            //            }
 
             this.tracker_log(config, "GRAPHQL QUERY FAILED TO EXECUTE: ");
             this.tracker_log(config, "");
@@ -382,7 +385,7 @@ class HasuraAutoTracker {
         this.tracker_log(config, "");
     }
 
-    
+
     //--------------------------------------------------------------------------------------------------------------------------
     // Create the view: DROP if exists, create view, add comment to view
     generateView(config, view) {
