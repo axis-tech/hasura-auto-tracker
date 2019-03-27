@@ -23,8 +23,22 @@ fs.readFile(configFile, (err, data) => {
 
     var tracker_config = {
         ...config,
-        getArrayRelationshipName: null,  // Add your own function(relationship_spec) - return a string
-        getObjectRelationshipName: null // Add your own function(relationship_spec) - return a string
+
+        // Provide more succinct relationship names
+        getArrayRelationshipName: function (config, relationship) {
+            if (relationship.key1 === relationship.key2)
+                return relationship.table1;
+            else
+                return relationship.key1.replace(config.primaryKeySuffix, "") + "_" + relationship.table1;
+        },
+
+        // Provide more succinct relationship names
+        getObjectRelationshipName: function (config, relationship) {
+            if (relationship.key1 === relationship.key2)
+                return relationship.key1.replace(config.primaryKeySuffix, "");
+            else
+                return relationship.table1 + "_" + relationship.key1.replace(config.primaryKeySuffix, "");
+        }
     };
 
     const hat = new HasuraAutoTracker();
