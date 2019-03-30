@@ -849,7 +849,7 @@ CAST(${view.columns.jsonColumn} ->> '${col.jsonName}' AS ${col.sqlType}) AS "${c
         if (!query)
             throw ("query is required");
 
-        let requestConfig = { };
+        let requestConfig = {};
 
         if (config.hasuraAdminSecret) {
             requestConfig = {
