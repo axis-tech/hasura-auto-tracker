@@ -19,31 +19,18 @@ fs.readFile(configFile, (err, data) => {
         config.operations.untrack = true;
         config.operations.trackTables = true;
         config.operations.trackRelationships = true;
+        config.operations.trackFunctions = true;
     }
-
-    var tracker_config = {
-        ...config,
-
-        // Provide more succinct relationship names
-        getArrayRelationshipName: function (config, relationship) {
-            if (relationship.key1 === relationship.key2)
-                return relationship.table1;
-            else
-                return relationship.key1.replace(config.primaryKeySuffix, "") + "_" + relationship.table1;
-        },
-
-        // Provide more succinct relationship names
-        getObjectRelationshipName: function (config, relationship) {
-            if (relationship.key1 === relationship.key2)
-                return relationship.key1.replace(config.primaryKeySuffix, "");
-            else
-                return relationship.table1 + "_" + relationship.key1.replace(config.primaryKeySuffix, "");
-        }
-    };
 
     const hat = new HasuraAutoTracker();
 
+    // Calling this method sets the relationship naming functions in the config
+    // The relationships will have compact names using just a table name when possible
+    // The relationship functions call camelCaseSingularName in order to get a singular form from a plural, e.g. customer from customers
+    // Refer to the hasura-auto-tracker source code for more details on how to build naming functions
+    hat.UseCompactRelationshipNaming(config);
+
     // Execute the tracker configuration
-    hat.ExecuteHasuraAutoTracker(tracker_config);
+    hat.ExecuteHasuraAutoTracker(config);
 });
 

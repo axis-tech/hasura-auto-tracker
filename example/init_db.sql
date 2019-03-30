@@ -5,7 +5,7 @@ CREATE SCHEMA hasura_test;
 -- ------------------------------------------------------------------------------
 
 CREATE TABLE hasura_test.customers (
-    "customerId" integer PRIMARY KEY, 
+    "customer_id" integer PRIMARY KEY, 
 
     name character varying(32) NOT NULL,
     description character varying(256) DEFAULT ''::character varying ,  
@@ -14,12 +14,45 @@ CREATE TABLE hasura_test.customers (
     "updatedAt" timestamp without time zone
 );
 
+
 -- ------------------------------------------------------------------------------
 
-CREATE TABLE hasura_test.devices (
-    "deviceId" integer PRIMARY KEY,
+CREATE TABLE hasura_test.device_types (
+    "device_type_id" integer PRIMARY KEY,
 
-    "customerId" integer
+    name character varying(32) NOT NULL,
+    description character varying(256) DEFAULT ''::character varying ,  
+
+    "createdAt" timestamp without time zone DEFAULT now() NOT NULL,
+    "updatedAt" timestamp without time zone
+);
+
+
+-- ------------------------------------------------------------------------------
+
+CREATE TABLE hasura_test.device_status (
+    "device_status_id" integer PRIMARY KEY,
+
+    name character varying(32) NOT NULL,
+
+    "createdAt" timestamp without time zone DEFAULT now() NOT NULL,
+    "updatedAt" timestamp without time zone
+);
+
+
+-- ------------------------------------------------------------------------------
+
+
+CREATE TABLE hasura_test.devices (
+    "device_id" integer PRIMARY KEY,
+
+    "device_type_id" integer
+        REFERENCES hasura_test.device_types NOT NULL,
+
+    "device_status_id" integer
+        REFERENCES hasura_test.device_status NOT NULL,
+
+    "customer_id" integer
         REFERENCES hasura_test.customers,
 
     name character varying(32) NOT NULL,
@@ -29,12 +62,13 @@ CREATE TABLE hasura_test.devices (
     "updatedAt" timestamp without time zone
 );
 
+
 -- ------------------------------------------------------------------------------
 
 CREATE TABLE hasura_test.messages (
-    "messageId" integer PRIMARY KEY,
+    "message_id" integer PRIMARY KEY,
 
-    "deviceId" integer
+    "device_id" integer
             REFERENCES hasura_test.devices,
 
     payload JSONB NOT NULL,
@@ -59,31 +93,73 @@ COMMENT ON TABLE hasura_test.messages IS 'Messages can be created by incoming Io
 --
 
 INSERT INTO hasura_test.customers
-("customerId", "name")
+("customer_id", "name")
 VALUES
 (1, 'Brit Corp'),
 (2, 'SpanTel'),
 (3, 'Oz Grain'),
-(4, 'NipponTek')
+(4, 'NipponTek'),
+(5, 'GasCo')
 ;
 
-INSERT INTO hasura_test.devices
-("deviceId", "customerId", "name","description")
+
+--
+-- DEVICE TYPES
+--
+-- Describe the function of a device
+--
+
+INSERT INTO hasura_test.device_types
+("device_type_id", "name", "description")
 VALUES 
-(1, 1,  'UK_WS_IOT_001', 'London'),
-(2, 1,  'UK_WS_IOT_002', 'Leeds'),
-(3, 1,  'UK_WS_IOT_003', 'Cardiff'),
-(4, 1,  'UK_WS_IOT_004', 'Belfast'),
+(1, 'IOT_RAIN', 'Rain gauge'),
+(2, 'IOT_WS', 'Weather Station'),
+(3, 'IOT_GPS', 'GPS position'),
+(4, 'IOT_MR', 'Meter reading')
+;
 
-(5, 2,  'Weather ES001', 'Madrid'),
-(6, 2,  'Weather ES002', 'Barcelona'),
-(7, 2,  'Weather ES003', 'Marbella'),
 
-(8, 3,  'Weather AU001', 'Perth'),
-(9, 3,  'Weather AU002', 'Sydney'),
-(10, 3, 'Weather AU003', 'Darwin'),
+--
+-- DEVICE TYPES
+--
+-- Describe the function of a device
+--
 
-(11, 4, 'Weather KP_TK_001', 'Tokyo')
+INSERT INTO hasura_test.device_status
+("device_status_id", "name")
+VALUES 
+(1, 'OK'),
+(2, 'FAULTY')
+;
+
+--
+-- DEVICES
+--
+-- Devices are of a specified type and belong to customers
+--
+
+
+INSERT INTO hasura_test.devices
+("device_id", "device_type_id",  "customer_id", "device_status_id", "name","description")
+VALUES 
+(1,  2, 1, 1, 'UK_WS_IOT_001', 'London'),
+(2,  2, 1, 2, 'UK_WS_IOT_002', 'Leeds'),
+(3,  2, 1, 1, 'UK_WS_IOT_003', 'Cardiff'),
+(4,  2, 1, 2, 'UK_WS_IOT_004', 'Belfast'),
+
+(5,  2, 2, 1, 'Weather ES001', 'Madrid'),
+(6,  2, 2, 2, 'Weather ES002', 'Barcelona'),
+(7,  2, 2, 1, 'Weather ES003', 'Marbella'),
+
+(8,  2, 3, 2, 'Weather AU001', 'Perth'),
+(9,  2, 3, 2, 'Weather AU002', 'Sydney'),
+(10, 2, 3, 1, 'Weather AU003', 'Darwin'),
+
+(11, 2, 4, 1, 'Weather KP_TK_001', 'Tokyo'),
+
+(12, 4, 5, 1, 'GM_AF7654321', 'Unit 1, The industrial estate, Leeds, LS1 1TJ'),
+(13, 4, 5, 2, 'GM_AF1234567', 'Big CarCo, Birmingham, B21 9DF'),
+(14, 4, 5, 1, 'GM_AF0010010', 'Little Cafe, Main Street, Manchester, M1 1AG')
 ;
 
 
@@ -94,7 +170,7 @@ VALUES
 --
 
 INSERT INTO hasura_test.messages
-("messageId", "timestamp", "deviceId", "payload")
+("message_id", "timestamp", "device_id", "payload")
 VALUES
 (1,  NOW(), 1, '{ "temperature": 25.1, "humidity": 10, "windspeed": 25, "winddirection": "N" }'),
 (2,  NOW(), 1, '{ "temperature": 26.8, "humidity": 20, "windspeed": 20, "winddirection": "NE" }'),

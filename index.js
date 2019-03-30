@@ -15,14 +15,20 @@ class HasuraAutoTracker {
     // Default constructor
     constructor() { }
 
-
     //---------------------------------------------------------------------------------------------------------------------------
     // Entry point
     async ExecuteHasuraAutoTracker(config) {
+        if (!config)
+            throw ("config is required");
+
         // Refer to the documentation - the defauly expectation is that primary / foreign key names are suffixed with _id
         // The suffix (e.g. '_id') is removed and the remaining text is used in naming relationships
         if (!config.primaryKeySuffix) {
             config.primaryKeySuffix = "_id";
+        }
+
+        if (!config.functionAndClause) {
+            config.functionAndClause = '';
         }
 
         this.tracker_log(config, "--------------------------------------------------------------");
@@ -36,15 +42,18 @@ class HasuraAutoTracker {
         this.tracker_log(config, " Array relationship naming : " + (config.getArrayRelationshipName ? "Custom" : "Default"));
         this.tracker_log(config, "Object relationship naming : " + (config.getObjectRelationshipName ? "Custom" : "Default"));
         this.tracker_log(config, "");
+        this.tracker_log(config, "Additional Function filter : " + (config.functionAndClause == '' ? "Not set" : config.functionAndClause));
+        this.tracker_log(config, "");
         this.tracker_log(config, "--------------------------------------------------------------");
         this.tracker_log(config, "");
 
+
         if (!config.getArrayRelationshipName) {
-            config.getArrayRelationshipName = this.createDefaultArrayRelationshipName;
+            config.getArrayRelationshipName = this.defaultArrayRelationshipName;
         }
 
         if (!config.getObjectRelationshipName) {
-            config.getObjectRelationshipName = this.createDefaultObjectRelationshipName;
+            config.getObjectRelationshipName = this.defaultObjectRelationshipName;
         }
 
 
@@ -63,11 +72,20 @@ class HasuraAutoTracker {
             `
  SELECT tc.table_name, kcu.column_name, ccu.table_name AS foreign_table_name, ccu.column_name AS foreign_column_name 
  FROM information_schema.table_constraints AS tc 
- JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name 
- JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name 
+ JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name AND kcu.constraint_schema = '${config.targetSchema}'
+ JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name AND ccu.constraint_schema = '${config.targetSchema}'
  WHERE constraint_type = 'FOREIGN KEY' 
- AND tc.constraint_schema = '${config.targetSchema}';
- `;
+ AND tc.table_schema = '${config.targetSchema}'
+ ;`;
+
+        const function_sql =
+            `
+SELECT functions.routine_name 
+FROM   information_schema.routines functions
+WHERE  functions.routine_type='FUNCTION' 
+AND    functions.specific_schema='${config.targetSchema}'
+${config.functionAndClause}
+;`;
 
         const check_schema =
             `SELECT schema_name FROM information_schema.schemata WHERE schema_name = '${config.targetSchema}';`
@@ -75,6 +93,9 @@ class HasuraAutoTracker {
         await this.runSQL_Query(config, check_schema)
             .then((results) => {
                 var schema = results.map(t => t[0]).splice(1);
+
+                if (schema.length == 1)
+                    return;
 
                 this.tracker_log(config, "");
                 this.tracker_log(config, "");
@@ -90,21 +111,13 @@ class HasuraAutoTracker {
                 this.tracker_log(config, "");
                 this.tracker_log(config, "--------------------------------------------------------------");
 
-                if (schema.length != 1)
-                    throw config.targetSchema + " - schema does not exist";
+                throw config.targetSchema + " - schema does not exist";
             });
-
-
-        // --------------------------------------------------------------------------------------------------------------------------
-        // Create SQL views, these scripts can also flatten JSON values to SQL columns
-        if (config.views) {
-            this.generateViews(config, config.views);
-        }
 
         if (config.operations.untrack) {
 
             await this.runSQL_Query(config, table_sql)
-                .then((results) => {
+                .then(async (results) => {
 
                     var tables = results
                         .map(t => t[0])
@@ -112,13 +125,45 @@ class HasuraAutoTracker {
 
                     // --------------------------------------------------------------------------------------------------------------------------
                     // Drop tracking information for all tables / views, this will also untrack any relationships
-                    this.untrackTables(config, tables);
+                    await this.untrackTables(config, tables);
+                });
+
+            await this.runSQL_Query(config, function_sql)
+                .then(async (results) => {
+
+                    var functions = results
+                        .map(t => t[0])
+                        .splice(1);
+
+                    // --------------------------------------------------------------------------------------------------------------------------
+                    // Drop tracking information for functions
+                    await this.untrackFunctions(config, functions);
+                });
+        }
+
+        // --------------------------------------------------------------------------------------------------------------------------
+        // Create SQL views, these scripts can also flatten JSON values to SQL columns
+        if (config.views) {
+            await this.generateViews(config, config.views);
+        }
+
+        if (config.operations.trackFunctions) {
+            await this.runSQL_Query(config, function_sql)
+                .then(async (results) => {
+
+                    var functions = results
+                        .map(t => t[0])
+                        .splice(1);
+
+                    // --------------------------------------------------------------------------------------------------------------------------
+                    // Configure HASURA to track functions
+                    await this.trackFunctions(config, functions);
                 });
         }
 
         if (config.operations.trackTables) {
             await this.runSQL_Query(config, table_sql)
-                .then((results) => {
+                .then(async (results) => {
 
                     var tables = results
                         .map(t => t[0])
@@ -126,7 +171,7 @@ class HasuraAutoTracker {
 
                     // --------------------------------------------------------------------------------------------------------------------------
                     // Configure HASURA to track all TABLES and VIEWS - tables and views are added to the GraphQL schema automatically
-                    this.trackTables(config, tables);
+                    await this.trackTables(config, tables);
                 });
         }
 
@@ -134,7 +179,8 @@ class HasuraAutoTracker {
 
             // Create the list of relationships required by foreign keys
             await this.runSQL_Query(config, foreignKey_sql)
-                .then((results) => {
+                .then(async (results) => {
+
                     var foreignKeys = results.splice(1)
                         .map(fk => {
                             return {
@@ -160,35 +206,286 @@ class HasuraAutoTracker {
 
                     // --------------------------------------------------------------------------------------------------------------------------
                     // Configure HASURA to track all FOREIGN KEY RELATIONSHIPS - enables GraphQL to fetch related (nested) entities
-                    this.trackRelationships(config, foreignKeys);
+                    await this.trackRelationships(config, foreignKeys);
                     this.tracker_log(config, "");
                 });
 
         }
     }
 
+    // Setup of relationship naming should be done before execution of the auto tracker
+    //#region Relationship naming
 
     //---------------------------------------------------------------------------------------------------------------------------
-    // Default relationship name builders
-    createDefaultArrayRelationshipName(config, relationship) {
+    // If foreign key name and primary key are same, then use the table name as relationship name
+    UseCompactRelationshipNaming(config) {
+        if (!config)
+            throw ("config is required");
+
+        config.getArrayRelationshipName = this.compactArrayRelationshipName;
+        config.getObjectRelationshipName = this.compactObjectRelationshipName;
+        config.runNameProcessors = this.runNameProcessors;
+
+        if (!config.nameProcessors)
+            config.nameProcessors = [];
+
+        config.nameProcessors.push(this.singularName);
+        config.nameProcessors.push(this.camelCaseName);
+    }
+
+
+    //---------------------------------------------------------------------------------------------------------------------------
+    // If foreign key name and primary key are same, then use the table name as relationship name
+    UseDefaultRelationshipNaming(config) {
+        if (!config)
+            throw ("config is required");
+
+        config.getArrayRelationshipName = this.defaultArrayRelationshipName;
+        config.getObjectRelationshipName = this.defaultObjectRelationshipName;
+    }
+
+
+    //---------------------------------------------------------------------------------------------------------------------------
+    // Provide more succinct relationship names
+    compactArrayRelationshipName(config, relationship) {
+        if (!config)
+            throw ("config is required");
+
+        if (!relationship)
+            throw ("relationship is required");
+
+        var name;
+
+        if (relationship.key1 === relationship.key2)
+            name = relationship.table1;
+        else
+            name = relationship.key1.replace(config.primaryKeySuffix, "") + "_" + relationship.table1;
+
+        return config.runNameProcessors ? config.runNameProcessors(config, name, false) : name;
+    }
+
+
+    //---------------------------------------------------------------------------------------------------------------------------
+    // Provide more succinct relationship names
+    compactObjectRelationshipName(config, relationship) {
+        if (!config)
+            throw ("config is required");
+
+        if (!relationship)
+            throw ("config is required");
+
+        var name;
+
+        if (relationship.key1 === relationship.key2)
+            name = relationship.table2;
+        else
+            name = relationship.table1 + "_" + relationship.key1.replace(config.primaryKeySuffix, "");
+
+        return config.runNameProcessors ? config.runNameProcessors(config, name, true) : name;
+    }
+
+
+    //---------------------------------------------------------------------------------------------------------------------------
+    // Default relationship name builder
+    defaultArrayRelationshipName(config, relationship) {
+        if (!config)
+            throw ("config is required");
+
         return relationship.key1.replace(config.primaryKeySuffix, "") + "_" + relationship.table1;
     }
 
 
-    createDefaultObjectRelationshipName(config, relationship) {
+    //---------------------------------------------------------------------------------------------------------------------------
+    // Default relationship name builder
+    defaultObjectRelationshipName(config, relationship) {
+        if (!config)
+            throw ("config is required");
+
         return relationship.table1 + "_" + relationship.key1.replace(config.primaryKeySuffix, "");
+    }
+
+    //---------------------------------------------------------------------------------------------------------------------------
+    // convert foreign_key_names into foreignKeyName
+    camelCaseName(inputString) {
+        if (!inputString)
+            throw ("inputString is required");
+
+        var text = inputString.toLowerCase()
+            .replace(/[_-]/g, " ") // Break up the words in my_foreign_key_name to be like my foreign key name
+            .replace(/\s[a-z]/g, (s) => s.toUpperCase()) // capitalise each word
+            .replace(" ", "") // remove the space to join the words back together
+            .replace(/^[A-Z]/, (s) => s.toLowerCase()) // ensure the first word is lowercased
+            ;
+
+        return text;
+    }
+
+    //---------------------------------------------------------------------------------------------------------------------------
+    // handle plural words which can easily be singularised 
+    singularName(inputString, singular) {
+        if (!inputString)
+            throw ("inputString is required");
+
+        var text = inputString;
+
+        // If the singular form of the name is required then use some simple logic to get the singular form
+        // If the logic doesn't work, just return whatever text was created above
+        if (singular) {
+
+            if (["ies"].indexOf(text.slice(text.length - 3)) >= 0) {
+                text = text.slice(0, text.length - 3) + "y";
+            }
+            else if (["us", "ss"].indexOf(text.slice(text.length - 2)) < 0) {
+                if (text.slice(text.length - 1) == "s") {
+                    text = text.slice(0, text.length - 1);
+                }
+            }
+        }
+
+        return text;
+    }
+
+
+    //---------------------------------------------------------------------------------------------------------------------------
+    // Run the collection of name processors to refine the name of the relationship
+    runNameProcessors(config, name, singular) {
+        if (!config)
+            throw ("config is required");
+
+        if (!name)
+            throw ("name is required");
+
+        for (const processor of config.nameProcessors)
+            name = processor(name, singular);
+
+        return name;
+    }
+
+
+    //#endregion
+
+
+    //#region Function Tracking
+
+    // --------------------------------------------------------------------------------------------------------------------------
+    // Configure HASURA to track functions
+    async untrackFunctions(config, functions) {
+        if (!config)
+            throw ("config is required");
+
+        this.tracker_log(config, "");
+        this.tracker_log(config, "REMOVE PREVIOUS HASURA TRACKING DETAILS FOR FUNCTIONS");
+
+        functions.map(async (function_name) => {
+            this.tracker_log(config, "    UNTRACK FUNCTION - " + function_name);
+
+            var query = {
+                type: "untrack_function",
+                args: {
+                    schema: config.targetSchema,
+                    name: function_name
+                }
+            };
+
+            await this.runGraphQL_Query(config, query)
+                .catch(e => {
+                    if (e.response.data.error.includes("function not found in cache")) {
+                        return;
+                    }
+
+                    this.tracker_log(config, "");
+                    this.tracker_log(config, "");
+                    this.tracker_log(config, "--------------------------------------------------------------");
+                    this.tracker_log(config, "");
+                    this.tracker_log(config, "HASURA_AUTO_TRACKER: ERROR");
+                    this.tracker_log(config, "");
+                    this.tracker_log(config, "GRAPHQL QUERY FAILED TO EXECUTE");
+                    this.tracker_log(config, "");
+                    this.tracker_log(config, "Error Message : " + e.response.data.internal.error.message);
+                    this.tracker_log(config, e.response.request.data);
+                    this.tracker_log(config, "");
+                    this.tracker_log(config, "Query:");
+                    this.tracker_log(config, "");
+                    this.tracker_log(config, JSON.stringify(query));
+                    this.tracker_log(config, "");
+                    this.tracker_log(config, "Are Hasura and the database fully initialised?");
+                    this.tracker_log(config, "");
+                    this.tracker_log(config, "--------------------------------------------------------------");
+                });;
+        });
     }
 
 
     // --------------------------------------------------------------------------------------------------------------------------
     // Configure HASURA to track all tables and views in the specified schema -> 'HASURA_AUTO_TRACKER'
-    untrackTables(config, tables) {
+    async trackFunctions(config, functions) {
+        if (!config)
+            throw ("config is required");
 
-        this.tracker_log(config, "REMOVE PREVIOUS HASURA TRACKING DETAILS");
         this.tracker_log(config, "");
+        this.tracker_log(config, "CONFIGURE HASURA FUNCTION TRACKING");
 
-        tables.map((table_name) => {
-            this.tracker_log(config, "UNTRACKING - " + table_name);
+        functions.map(async (function_name) => {
+            this.tracker_log(config, "    TRACK FUNCTION - " + function_name);
+
+            var query = {
+                type: "track_function",
+                args: {
+                    schema: config.targetSchema,
+                    name: function_name
+                }
+            };
+
+            await this.runGraphQL_Query(config, query)
+                .catch(e => {
+                    if (e.response.data.error.includes("already tracked")) {
+                        return;
+                    }
+
+                    if (e.response.data.error.includes("not return a ")) {
+                        this.tracker_log(config, "");
+                        this.tracker_log(config, "");
+                        this.tracker_log(config, "--------------------------------------------------------------");
+                        this.tracker_log(config, ""); this.tracker_log(config, "ERROR TRACKING FUNCTION : '" + function_name + "'");
+                        this.tracker_log(config, "");
+                        this.tracker_log(config, "Error Message - Functions must return COMPOSITE type. Refer to Hasura documentation.");
+                        this.tracker_log(config, "");
+                    }
+                    else {
+
+                        this.tracker_log(config, "");
+                        this.tracker_log(config, "");
+                        this.tracker_log(config, "--------------------------------------------------------------");
+                        this.tracker_log(config, ""); this.tracker_log(config, "GRAPHQL QUERY FAILED TO EXECUTE: ");
+                        this.tracker_log(config, "");
+                        this.tracker_log(config, JSON.stringify(query));
+                        this.tracker_log(config, "");
+                        this.tracker_log(config, "EXCEPTION DETAILS - creating " + currentRelationshipType + " - " + currentRelationshipName);
+                        this.tracker_log(config, "");
+                        this.tracker_log(config, e.response.request.data);
+                        this.tracker_log(config, "");
+                    }
+
+                    throw e.response.request.data
+                });;
+        });
+    }
+
+    //#endregion
+
+
+    //#region Table Tracking
+
+    // --------------------------------------------------------------------------------------------------------------------------
+    // Configure HASURA to track all tables and views in the specified schema -> 'HASURA_AUTO_TRACKER'
+    async untrackTables(config, tables) {
+        if (!config)
+            throw ("config is required");
+
+        this.tracker_log(config, "REMOVE PREVIOUS HASURA TRACKING DETAILS FOR TABLES AND VIEWS");
+
+        tables.map(async (table_name) => {
+            this.tracker_log(config, "    UNTRACK TABLE - " + table_name);
 
             var query = {
                 type: "untrack_table",
@@ -201,7 +498,7 @@ class HasuraAutoTracker {
                 }
             };
 
-            this.runGraphQL_Query(config, query)
+            await this.runGraphQL_Query(config, query)
                 .catch(e => {
                     if (e.response.data.error.includes("already untracked")) {
                         return;
@@ -232,13 +529,15 @@ class HasuraAutoTracker {
 
     // --------------------------------------------------------------------------------------------------------------------------
     // Configure HASURA to track all tables and views in the specified schema -> 'HASURA_AUTO_TRACKER'
-    trackTables(config, tables) {
+    async trackTables(config, tables) {
+        if (!config)
+            throw ("config is required");
+
         this.tracker_log(config, "");
         this.tracker_log(config, "CONFIGURE HASURA TABLE/VIEW TRACKING");
-        this.tracker_log(config, "");
 
-        tables.map((table_name) => {
-            this.tracker_log(config, "TRACKING - " + table_name);
+        tables.map(async (table_name) => {
+            this.tracker_log(config, "    TRACK TABLE        - " + table_name);
 
             var query = {
                 type: "track_table",
@@ -248,7 +547,7 @@ class HasuraAutoTracker {
                 }
             };
 
-            return this.runGraphQL_Query(config, query).catch(e => {
+            await this.runGraphQL_Query(config, query).catch(e => {
 
                 if (e.response.data.error.includes("already tracked")) {
                     return;
@@ -266,11 +565,17 @@ class HasuraAutoTracker {
         });
     }
 
+    //#endregion
+
+
+    //#region Relationship Tracking
 
     // --------------------------------------------------------------------------------------------------------------------------
     // Configure HASURA to track all relationships
     // This requires an array relationship in one direction and an object relationship in the opposite direction
-    trackRelationships(config, relationships) {
+    async trackRelationships(config, relationships) {
+        if (!config)
+            throw ("config is required");
 
         if ((!config.primaryKeySuffix || config.primaryKeySuffix.trim() == "") &&
             (!config.getArrayRelationshipName || !getObjectRelationshipName)
@@ -280,10 +585,9 @@ class HasuraAutoTracker {
 
         this.tracker_log(config, "");
         this.tracker_log(config, "CONFIGURE HASURA RELATIONSHIP TRACKING");
-        this.tracker_log(config, "");
 
-        relationships.map((relationship) => {
-            this.createRelationships(config, relationship);
+        relationships.map(async (relationship) => {
+            await this.createRelationships(config, relationship);
         });
     }
 
@@ -291,45 +595,44 @@ class HasuraAutoTracker {
     // It is possible to pass in two functions, which should generate the name of the relationship:
     // getArrayRelationshipName - Must return a string, used as the name of array relationships
     // getObjectRelationshipName - Must return a string, used as the name of object relationships
-    createRelationships(config, relationship) {
+    async createRelationships(config, relationship) {
+        if (!config)
+            throw ("config is required");
 
         if (relationship.addArrayRelationship) {
             const array_rel_spec = {
                 type: "create_array_relationship",
-
                 name: relationship.name ? relationship.name : config.getArrayRelationshipName(config, relationship),
-
                 srcTable: relationship.table2,
                 srcKey: relationship.key2,
                 destTable: relationship.table1,
                 destKey: relationship.key1
             };
 
-            this.createRelationship(config, array_rel_spec);
+            await this.createRelationship(config, array_rel_spec);
         }
 
         if (relationship.addObjectRelationship) {
             const obj_rel_spec = {
                 type: "create_object_relationship",
-
                 name: relationship.name ? relationship.name : config.getObjectRelationshipName(config, relationship),
-
                 srcTable: relationship.table1,
                 srcKey: relationship.key1,
                 destTable: relationship.table2,
                 destKey: relationship.key2
             };
 
-            this.createRelationship(config, obj_rel_spec);
+            await this.createRelationship(config, obj_rel_spec);
         }
     }
 
     // --------------------------------------------------------------------------------------------------------------------------
     // Create the specified relationship
-    createRelationship(config, relSpec) {
-        this.tracker_log(config, "TRACKING RELATIONSHIP - " + relSpec.type + " name:" + relSpec.name);
-        //        this.tracker_log(config, "                      - " + relSpec.srcTable + "." + relSpec.srcKey + " -> " + relSpec.destTable + "." + relSpec.destKey);
-        //        this.tracker_log(config, "");
+    async createRelationship(config, relSpec) {
+        if (!config)
+            throw ("config is required");
+
+        this.tracker_log(config, "    TRACK RELATIONSHIP - " + relSpec.type + " : " + relSpec.srcTable + "->" + relSpec.name);
 
         var hasuraApiRelationshipType = {
             type: relSpec.type,
@@ -357,27 +660,34 @@ class HasuraAutoTracker {
         // Create a name for the key, and assign a value to the key
         hasuraApiRelationshipType.args.using.manual_configuration.column_mapping[relSpec.srcKey] = relSpec.destKey;
 
-        this.runGraphQL_Query(config, hasuraApiRelationshipType).catch(e => {
+        await this.runGraphQL_Query(config, hasuraApiRelationshipType)
+            .catch(e => {
 
-            //            if (e.response.data.error.includes("already exists")) {
-            //                return;
-            //            }
+                if (e.response.data.error.includes("already exists")) {
+                    return;
+                }
 
-            this.tracker_log(config, "GRAPHQL QUERY FAILED TO EXECUTE: ");
-            this.tracker_log(config, "");
-            this.tracker_log(config, JSON.stringify(hasuraApiRelationshipType));
-            this.tracker_log(config, "");
-            this.tracker_log(config, "EXCEPTION DETAILS - creating " + relSpec.type + " - " + relSpec.name);
-            this.tracker_log(config, "");
-            this.tracker_log(config, e.response.data);
-            this.tracker_log(config, "");
-        });
+                this.tracker_log(config, "GRAPHQL QUERY FAILED TO EXECUTE: ");
+                this.tracker_log(config, "");
+                this.tracker_log(config, JSON.stringify(hasuraApiRelationshipType));
+                this.tracker_log(config, "");
+                this.tracker_log(config, "EXCEPTION DETAILS - creating " + relSpec.type + " - " + relSpec.name);
+                this.tracker_log(config, "");
+                this.tracker_log(config, e.response.data);
+                this.tracker_log(config, "");
+            });
     }
 
+    //#endregion
+
+
+    //#region View Generation
 
     //--------------------------------------------------------------------------------------------------------------------------
     // Create Postgres views that flatten JSON payloads into SQL columns
-    generateViews(config) {
+    async generateViews(config) {
+        if (!config)
+            throw ("config is required");
 
         // --------------------------------------------------------------------------------------------------------------------------
         // Execute SQL scripts required before view creation
@@ -385,45 +695,27 @@ class HasuraAutoTracker {
             this.executeScripts(config, config.scripts.beforeViews);
         }
 
-        this.tracker_log(config, "CREATE SQL VIEWS FOR MESSAGE PAYLOADS");
+        this.tracker_log(config, "CREATE SQL VIEWS");
 
         config.views.map((view) => {
             this.generateView(config, view);
         });
 
-        this.tracker_log(config, "");
-
         // --------------------------------------------------------------------------------------------------------------------------
         // Execute SQL scripts required after view creation
         if (config.scripts && config.scripts.afterViews) {
-            this.executeScripts(config, config.scripts.afterViews);
+            await this.executeScripts(config, config.scripts.afterViews);
         }
     }
 
 
     //--------------------------------------------------------------------------------------------------------------------------
-    // Execute a list of SQL scripts
-    executeScripts(config, scripts) {
-
-        scripts.map((s) => {
-
-            var content = fs.readFileSync(s.source, { encoding: "utf8" });
-            this.tracker_log(config, "EXECUTE SQL SCRIPT - " + s.source);
-
-            if (content.trim().length > 0) {
-                this.runSQL_Query(config, content);
-            }
-
-        });
-
-        this.tracker_log(config, "");
-    }
-
-
-    //--------------------------------------------------------------------------------------------------------------------------
     // Create the view: DROP if exists, create view, add comment to view
-    generateView(config, view) {
-        this.tracker_log(config, "CREATE VIEW - " + view.name);
+    async generateView(config, view) {
+        if (!config)
+            throw ("config is required");
+
+        this.tracker_log(config, "    CREATE VIEW - " + view.name);
 
         if (view.relationships) {
             view.relationships.map(relationship => {
@@ -467,17 +759,44 @@ CAST(${view.columns.jsonColumn} ->> '${col.jsonName}' AS ${col.sqlType}) AS "${c
  ${view.query.orderBy};
  ${view_footer};`;
 
-        this.runSQL_Query(config, sql_statement)
+        await this.runSQL_Query(config, sql_statement)
             .then(() => {
                 this.tracker_log("Created ${view.name}")
             });
+    }
+
+    //#endregion
+
+
+    //#region Hasura API Calls
+
+    //--------------------------------------------------------------------------------------------------------------------------
+    // Execute a list of SQL scripts
+    async executeScripts(config, scripts) {
+        if (!config)
+            throw ("config is required");
+
+        this.tracker_log(config, "");
+        this.tracker_log(config, "EXECUTE SQL SCRIPTS");
+
+        scripts.map(async (s) => {
+
+            var content = fs.readFileSync(s.source, { encoding: "utf8" });
+            this.tracker_log(config, "    EXECUTE SQL SCRIPT - " + s.source);
+
+            if (content.trim().length > 0) {
+                await this.runSQL_Query(config, content);
+            }
+
+        });
+
+        this.tracker_log(config, "");
     }
 
 
     //--------------------------------------------------------------------------------------------------------------------------
     // Execute a Postgres SQL query via the Hasura API
     async runSQL_Query(config, sql_statement) {
-
         if (!config)
             throw ("config is required");
 
@@ -503,7 +822,12 @@ CAST(${view.columns.jsonColumn} ->> '${col.jsonName}' AS ${col.sqlType}) AS "${c
                 this.tracker_log(config, "");
                 this.tracker_log(config, "SQL QUERY FAILED TO EXECUTE: ");
                 this.tracker_log(config, "");
-                this.tracker_log(config, "Error Message : " + e.response.data.internal.error.message);
+
+                if (!e.response)
+                    this.tracker_log(config, "Error Message : " + e);
+                else
+                    this.tracker_log(config, "Error Message : " + e.response.data.internal.error.message);
+
                 this.tracker_log(config, "");
                 this.tracker_log(config, "SQL Statement:");
                 this.tracker_log(config, "");
@@ -518,20 +842,23 @@ CAST(${view.columns.jsonColumn} ->> '${col.jsonName}' AS ${col.sqlType}) AS "${c
 
     //--------------------------------------------------------------------------------------------------------------------------
     // Execute a GraphQL query via the Hasura API
-    runGraphQL_Query(config, query) {
-
+    async runGraphQL_Query(config, query) {
         if (!config)
             throw ("config is required");
 
         if (!query)
             throw ("query is required");
 
-        return axios.post(config.hasuraEndpoint, query)
+        return await axios.post(config.hasuraEndpoint, query)
             .then(result => {
                 return result;
             });
     }
 
+    //#endregion
+
+
+    //#region Utilities
 
     //--------------------------------------------------------------------------------------------------------------------------
     // Write log text if output is requested by the config
@@ -543,6 +870,8 @@ CAST(${view.columns.jsonColumn} ->> '${col.jsonName}' AS ${col.sqlType}) AS "${c
             console.log(text);
         }
     }
+
+    //#endregion
 }
 
 module.exports = HasuraAutoTracker;

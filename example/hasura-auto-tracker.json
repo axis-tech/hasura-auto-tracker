@@ -1,5 +1,5 @@
     {
-        "hasuraEndpoint": "http://localhost:4010/v1/query",
+        "hasuraEndpoint": "http://localhost:5402/v1/query",
         "targetSchema": "hasura_test",
         "primaryKeySuffix": "Id",
         "logOutput": true,
@@ -20,7 +20,7 @@
                 "name": "json_data",
                 "description": "Convert JSON fields into SQL columns",
                 "query": {
-                    "select": "SELECT messages.\"messageId\"",
+                    "select": "SELECT messages.message_id",
                     "from": "FROM hasura_test.messages AS messages",
                     "join": "",
                     "where": "",
@@ -60,9 +60,9 @@
                     {
                         "type": "create_object_relationship",
                         "name": "sourceMessage",
-                        "srcKey": "messageId",
+                        "srcKey": "message_id",
                         "destTable": "messages",
-                        "destKey": "messageId"
+                        "destKey": "message_id"
                     }
                 ]
             }
