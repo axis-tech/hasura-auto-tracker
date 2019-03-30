@@ -63,7 +63,7 @@ class HasuraAutoTracker {
         const table_sql =
             `
  SELECT table_name FROM information_schema.tables WHERE table_schema = '${config.targetSchema}'
- UNION 
+ UNION
  SELECT table_name FROM information_schema.views WHERE table_schema = '${config.targetSchema}'
  ORDER BY table_name;
  `;
@@ -849,7 +849,18 @@ CAST(${view.columns.jsonColumn} ->> '${col.jsonName}' AS ${col.sqlType}) AS "${c
         if (!query)
             throw ("query is required");
 
-        return await axios.post(config.hasuraEndpoint, query)
+        let requestConfig = { };
+
+        if (config.hasuraAdminSecret) {
+            requestConfig = {
+                ...requestConfig,
+                headers: {
+                    'X-Hasura-Admin-Secret': config.hasuraAdminSecret,
+                },
+            };
+        }
+
+        return await axios.post(config.hasuraEndpoint, query, requestConfig)
             .then(result => {
                 return result;
             });
