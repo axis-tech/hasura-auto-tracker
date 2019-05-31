@@ -93,6 +93,7 @@ if (!hatConfig.operations) {
   hatConfig.operations.untrack = true;
   hatConfig.operations.trackTables = true;
   hatConfig.operations.trackRelationships = true;
+  hatConfig.operations.trackFunctions = true;
 }
 
 console.log(`hasura-auto-tracker will run with the following configuration:
