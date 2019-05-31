@@ -113,8 +113,8 @@ INSERT INTO hasura_test.device_types
 ("device_type_id", "name", "description")
 VALUES 
 (1, 'IOT_RAIN', 'Rain gauge'),
-(2, 'IOT_WS', 'Weather Station'),
-(3, 'IOT_GPS', 'GPS position'),
+(2, 'IOT_WEATHER', 'Weather'),
+(3, 'IOT_GPS', 'GPS location'),
 (4, 'IOT_MR', 'Meter reading')
 ;
 
@@ -129,7 +129,7 @@ INSERT INTO hasura_test.device_status
 ("device_status_id", "name")
 VALUES 
 (1, 'OK'),
-(2, 'FAULTY')
+(2, 'FAULT')
 ;
 
 --
@@ -142,10 +142,10 @@ VALUES
 INSERT INTO hasura_test.devices
 ("device_id", "device_type_id",  "customer_id", "device_status_id", "name","description")
 VALUES 
-(1,  2, 1, 1, 'UK_WS_IOT_001', 'London'),
-(2,  2, 1, 2, 'UK_WS_IOT_002', 'Leeds'),
-(3,  2, 1, 1, 'UK_WS_IOT_003', 'Cardiff'),
-(4,  2, 1, 2, 'UK_WS_IOT_004', 'Belfast'),
+(1,  2, 1, 1, 'UK_IOT_001', 'London'),
+(2,  2, 1, 2, 'UK_IOT_002', 'Leeds'),
+(3,  2, 1, 1, 'UK_IOT_003', 'Cardiff'),
+(4,  2, 1, 2, 'UK_IOT_004', 'Belfast'),
 
 (5,  2, 2, 1, 'Weather ES001', 'Madrid'),
 (6,  2, 2, 2, 'Weather ES002', 'Barcelona'),
@@ -172,27 +172,27 @@ VALUES
 INSERT INTO hasura_test.messages
 ("message_id", "timestamp", "device_id", "payload")
 VALUES
-(1,  NOW(), 1, '{ "temperature": 25.1, "humidity": 10, "windspeed": 25, "winddirection": "N" }'),
-(2,  NOW(), 1, '{ "temperature": 26.8, "humidity": 20, "windspeed": 20, "winddirection": "NE" }'),
-(3,  NOW(), 1, '{ "temperature": 27.3, "humidity": 30, "windspeed": 10, "winddirection": "NE" }'),
-(4,  NOW(), 1, '{ "temperature": 28.5, "humidity": 40, "windspeed": 15, "winddirection": "NW" }'),
-(5,  NOW(), 1, '{ "temperature": 31.2, "humidity": 50, "windspeed": 20, "winddirection": "NW" }'),
+(1,  NOW(), 1, '{ "temp": 25.1, "rel_hum": 10, "wind_speed": 25, "wind_dir": "N" }'),
+(2,  NOW(), 1, '{ "temp": 26.8, "rel_hum": 20, "wind_speed": 20, "wind_dir": "NE" }'),
+(3,  NOW(), 1, '{ "temp": 27.3, "rel_hum": 30, "wind_speed": 10, "wind_dir": "NE" }'),
+(4,  NOW(), 1, '{ "temp": 28.5, "rel_hum": 40, "wind_speed": 15, "wind_dir": "NW" }'),
+(5,  NOW(), 1, '{ "temp": 31.2, "rel_hum": 50, "wind_speed": 20, "wind_dir": "NW" }'),
 
-(6,  NOW(), 2, '{ "temperature": 25.1, "humidity": 10, "windspeed": 25, "winddirection": "N" }'),
-(7,  NOW(), 2, '{ "temperature": 26.8, "humidity": 20, "windspeed": 20, "winddirection": "NE" }'),
-(8,  NOW(), 2, '{ "temperature": 27.3, "humidity": 30, "windspeed": 10, "winddirection": "NE" }'),
-(9,  NOW(), 2, '{ "temperature": 28.5, "humidity": 40, "windspeed": 15, "winddirection": "NW" }'),
-(10, NOW(), 2, '{ "temperature": 31.2, "humidity": 50, "windspeed": 20, "winddirection": "NW" }'),
+(6,  NOW(), 2, '{ "temp": 25.1, "rel_hum": 10, "wind_speed": 25, "wind_dir": "N" }'),
+(7,  NOW(), 2, '{ "temp": 26.8, "rel_hum": 20, "wind_speed": 20, "wind_dir": "NE" }'),
+(8,  NOW(), 2, '{ "temp": 27.3, "rel_hum": 30, "wind_speed": 10, "wind_dir": "NE" }'),
+(9,  NOW(), 2, '{ "temp": 28.5, "rel_hum": 40, "wind_speed": 15, "wind_dir": "NW" }'),
+(10, NOW(), 2, '{ "temp": 31.2, "rel_hum": 50, "wind_speed": 20, "wind_dir": "NW" }'),
 
-(11, NOW(), 3, '{ "temperature": 25.1, "humidity": 10, "windspeed": 25, "winddirection": "N" }'),
-(12, NOW(), 3, '{ "temperature": 26.8, "humidity": 20, "windspeed": 20, "winddirection": "NE" }'),
-(13, NOW(), 3, '{ "temperature": 27.3, "humidity": 30, "windspeed": 10, "winddirection": "NE" }'),
-(14, NOW(), 3, '{ "temperature": 28.5, "humidity": 40, "windspeed": 15, "winddirection": "NW" }'),
-(15, NOW(), 3, '{ "temperature": 31.2, "humidity": 50, "windspeed": 20, "winddirection": "NW" }'),
+(11, NOW(), 3, '{ "temp": 25.1, "rel_hum": 10, "wind_speed": 25, "wind_dir": "N" }'),
+(12, NOW(), 3, '{ "temp": 26.8, "rel_hum": 20, "wind_speed": 20, "wind_dir": "NE" }'),
+(13, NOW(), 3, '{ "temp": 27.3, "rel_hum": 30, "wind_speed": 10, "wind_dir": "NE" }'),
+(14, NOW(), 3, '{ "temp": 28.5, "rel_hum": 40, "wind_speed": 15, "wind_dir": "NW" }'),
+(15, NOW(), 3, '{ "temp": 31.2, "rel_hum": 50, "wind_speed": 20, "wind_dir": "NW" }'),
 
-(16, NOW(), 4, '{ "temperature": 25.1, "humidity": 10, "windspeed": 25, "winddirection": "N" }'),
-(17, NOW(), 5, '{ "temperature": 26.8, "humidity": 20, "windspeed": 20, "winddirection": "NE" }'),
-(18, NOW(), 6, '{ "temperature": 27.3, "humidity": 30, "windspeed": 10, "winddirection": "NE" }'),
-(19, NOW(), 7, '{ "temperature": 28.5, "humidity": 40, "windspeed": 15, "winddirection": "NW" }'),
-(20, NOW(), 8, '{ "temperature": 31.2, "humidity": 50, "windspeed": 20, "winddirection": "NW" }')
+(16, NOW(), 4, '{ "temp": 25.1, "rel_hum": 10, "wind_speed": 25, "wind_dir": "N" }'),
+(17, NOW(), 5, '{ "temp": 26.8, "rel_hum": 20, "wind_speed": 20, "wind_dir": "NE" }'),
+(18, NOW(), 6, '{ "temp": 27.3, "rel_hum": 30, "wind_speed": 10, "wind_dir": "NE" }'),
+(19, NOW(), 7, '{ "temp": 28.5, "rel_hum": 40, "wind_speed": 15, "wind_dir": "NW" }'),
+(20, NOW(), 8, '{ "temp": 31.2, "rel_hum": 50, "wind_speed": 20, "wind_dir": "NW" }')
 ;

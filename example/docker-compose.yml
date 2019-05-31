@@ -1,0 +1,37 @@
+version: '3.6'
+
+services:
+   
+    hat_db:
+        container_name: hat_db
+        image: postgres       
+         
+        volumes:
+            - ./initdb:/docker-entrypoint-initdb.d/
+
+        restart: always
+
+        environment:
+            POSTGRES_PASSWORD: hat_pass
+
+        ports: 
+          - "5400:5432"
+    
+    hat_hasura:
+        image: hasura/graphql-engine
+        container_name: hat_hasura
+        restart: always
+
+        environment:
+            - HASURA_GRAPHQL_DATABASE_URL=postgres://postgres:hat_pass@hat_db:5432/postgres
+            - HASURA_GRAPHQL_ENABLE_CONSOLE=true
+
+        links:
+            - hat_db
+
+        ports: 
+            - "5402:8080"
+
+        command:    
+            - graphql-engine
+            - serve

@@ -822,6 +822,8 @@ CAST(${view.columns.jsonColumn} ->> '${col.jsonName}' AS ${col.sqlType}) AS "${c
                 this.tracker_log(config, "");
                 this.tracker_log(config, "SQL QUERY FAILED TO EXECUTE: ");
                 this.tracker_log(config, "");
+                this.tracker_log(config, "ENDPOINT ADDRESS : " + config.hasuraEndpoint);
+                this.tracker_log(config, "");
 
                 if (!e.response)
                     this.tracker_log(config, "Error Message : " + e);

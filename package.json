@@ -1,6 +1,6 @@
 {
   "name": "hasura-auto-tracker",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Automatically configure Hasura tracking and generate additional tracked SQL views, e.g. views which can expose JSON data as SQL columns",
   "main": "index.js",
   "bin": {
@@ -13,19 +13,20 @@
   "author": "NamSource Pty Ltd - www.namsource.com",
   "license": "GPL-3.0",
   "scripts": {
+    "start_cli": "node cli.js --config example/hasura-auto-tracker.json",
     "start": "nodemon --exec babel-node example/run_hat.js",
     "updatenpm": "npm publish --access=public"
   },
   "dependencies": {
-    "axios": "^0.18.0",
+    "axios": "^0.19.0",
     "minimist": "^1.2.0"
   },
   "devDependencies": {
-    "express": "^4.16.4",
-    "nodemon": "^1.18.10",
     "@babel/core": "^7.3.4",
     "@babel/node": "^7.2.2",
-    "@babel/preset-env": "^7.3.4"
+    "@babel/preset-env": "^7.3.4",
+    "express": "^4.16.4",
+    "nodemon": "^1.18.10"
   },
   "bugs": {
     "url": "https://github.com/axis-tech/hasura-auto-tracker/issues"
