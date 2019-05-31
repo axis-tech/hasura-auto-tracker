@@ -3,7 +3,10 @@
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
+## Source Code
+https://github.com/axis-tech/hasura-auto-tracker
 
+# Introduction
 Configure Hasura to track tables, views and functions using a configuration driven process that fits perfectly into your Continuous Integration or Continuous Delivery piepline.
 
 # What's the big deal?
