@@ -1,8 +1,8 @@
     {
         "hasuraEndpoint": "http://localhost:5402/v1/query",
         "hasuraAdminSecret": "myadminsecretkey",
-        "targetSchema": "hasura_test",
-        "primaryKeySuffix": "Id",
+        "targetSchema": "public",
+        "primaryKeySuffix": "_id",
         "functionAndClause": "AND functions.routine_name LIKE 'myfunc%'",
         "logOutput": true,
         "scripts": {
@@ -23,7 +23,7 @@
                 "description": "Convert JSON fields into SQL columns",
                 "query": {
                     "select": "SELECT messages.message_id",
-                    "from": "FROM hasura_test.messages AS messages",
+                    "from": "FROM messages AS messages",
                     "join": "",
                     "where": "",
                     "orderBy": "ORDER BY \"timestamp\""

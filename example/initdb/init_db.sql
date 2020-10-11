@@ -1,10 +1,6 @@
-
-DROP SCHEMA IF EXISTS hasura_test CASCADE;
-CREATE SCHEMA hasura_test;
-
 -- ------------------------------------------------------------------------------
 
-CREATE TABLE hasura_test.customers (
+CREATE TABLE customers (
     "customer_id" integer PRIMARY KEY, 
 
     name character varying(32) NOT NULL,
@@ -17,7 +13,7 @@ CREATE TABLE hasura_test.customers (
 
 -- ------------------------------------------------------------------------------
 
-CREATE TABLE hasura_test.device_types (
+CREATE TABLE device_types (
     "device_type_id" integer PRIMARY KEY,
 
     name character varying(32) NOT NULL,
@@ -30,7 +26,7 @@ CREATE TABLE hasura_test.device_types (
 
 -- ------------------------------------------------------------------------------
 
-CREATE TABLE hasura_test.device_status (
+CREATE TABLE device_status (
     "device_status_id" integer PRIMARY KEY,
 
     name character varying(32) NOT NULL,
@@ -43,17 +39,17 @@ CREATE TABLE hasura_test.device_status (
 -- ------------------------------------------------------------------------------
 
 
-CREATE TABLE hasura_test.devices (
+CREATE TABLE devices (
     "device_id" integer PRIMARY KEY,
 
     "device_type_id" integer
-        REFERENCES hasura_test.device_types NOT NULL,
+        REFERENCES device_types NOT NULL,
 
     "device_status_id" integer
-        REFERENCES hasura_test.device_status NOT NULL,
+        REFERENCES device_status NOT NULL,
 
     "customer_id" integer
-        REFERENCES hasura_test.customers,
+        REFERENCES customers,
 
     name character varying(32) NOT NULL,
     description character varying(256) DEFAULT ''::character varying ,  
@@ -65,11 +61,11 @@ CREATE TABLE hasura_test.devices (
 
 -- ------------------------------------------------------------------------------
 
-CREATE TABLE hasura_test.messages (
+CREATE TABLE messages (
     "message_id" integer PRIMARY KEY,
 
     "device_id" integer
-            REFERENCES hasura_test.devices,
+            REFERENCES devices,
 
     payload JSONB NOT NULL,
 
@@ -78,7 +74,7 @@ CREATE TABLE hasura_test.messages (
     "createdAt" timestamp without time zone DEFAULT now() NOT NULL,
     "updatedAt" timestamp without time zone
 );
-COMMENT ON TABLE hasura_test.messages IS 'Messages can be created by incoming IoT payloads or the platform when transforming messages or creating alerts and various logs';
+COMMENT ON TABLE messages IS 'Messages can be created by incoming IoT payloads or the platform when transforming messages or creating alerts and various logs';
 
 
 ----------------------------------------------------------------------------------------
@@ -92,7 +88,7 @@ COMMENT ON TABLE hasura_test.messages IS 'Messages can be created by incoming Io
 -- Customers can be assigned to devices
 --
 
-INSERT INTO hasura_test.customers
+INSERT INTO customers
 ("customer_id", "name")
 VALUES
 (1, 'Brit Corp'),
@@ -109,7 +105,7 @@ VALUES
 -- Describe the function of a device
 --
 
-INSERT INTO hasura_test.device_types
+INSERT INTO device_types
 ("device_type_id", "name", "description")
 VALUES 
 (1, 'IOT_RAIN', 'Rain gauge'),
@@ -125,7 +121,7 @@ VALUES
 -- Describe the function of a device
 --
 
-INSERT INTO hasura_test.device_status
+INSERT INTO device_status
 ("device_status_id", "name")
 VALUES 
 (1, 'OK'),
@@ -139,7 +135,7 @@ VALUES
 --
 
 
-INSERT INTO hasura_test.devices
+INSERT INTO devices
 ("device_id", "device_type_id",  "customer_id", "device_status_id", "name","description")
 VALUES 
 (1,  2, 1, 1, 'UK_IOT_001', 'London'),
@@ -169,7 +165,7 @@ VALUES
 -- Messages are either received from Gateways or created by Modules
 --
 
-INSERT INTO hasura_test.messages
+INSERT INTO messages
 ("message_id", "timestamp", "device_id", "payload")
 VALUES
 (1,  NOW(), 1, '{ "temp": 25.1, "rel_hum": 10, "wind_speed": 25, "wind_dir": "N" }'),
