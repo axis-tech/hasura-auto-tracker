@@ -18,7 +18,7 @@
     "updatenpm": "npm publish --access=public"
   },
   "dependencies": {
-    "axios": "^0.19.0",
+    "axios": "^0.21.1",
     "minimist": "^1.2.0"
   },
   "devDependencies": {
