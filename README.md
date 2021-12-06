@@ -14,7 +14,7 @@ We all know how awesome Hasura is and how easy it is to fire up the user interfa
 
 Hasura can read values from JSON objects stored in SQL tables, but the values are not returned as their most appropraite type, i.e the values are not typed as integers and floats etc.
 
-Also, what if as part of your build process, you start with a clean database, want to inject your test data and run various scripts? You would have to restort to using different tools to configure hasura and then run your scripts.
+Also, what if as part of your build process, you start with a clean database, want to inject your test data and run various scripts? You would have to resort to using different tools to configure Hasura and then run your scripts.
 
 # hasura-auto-tracker to the rescue!
 `hasura-auto-tracker` (HAT) can be used anytime you want to configure the tracking of tables, views and functions, and don't want to interact with a user-interface, i.e. you want to use it as part of a scripted/automated process, or you want to build the code directly into your own tools / apps.
